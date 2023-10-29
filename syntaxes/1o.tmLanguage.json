@@ -1,0 +1,41 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "1o",
+	"patterns": [
+		{ "include": "#keywords" },
+		{ "include": "#strings" },
+		{ "include": "#identifiers" }
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.1o",
+				"match": "\\b(1o|app|server|client|dashboard|controllers|routes|store|pages|auth|products|alerts|notifications|signin|signup|product)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.1o",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.1o",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"identifiers": {
+		"patterns": [
+			{
+				"name": "entity.1o",
+				"match": "\\b\\w+\\.1o\\.(controller|model|component)\\b"
+			},
+			{
+				"name": "entity.1o.import",
+				"match": "import\\s+\\w+\\s+from\\s+'\\w+\\.1o\\.(controller|model|component)'"
+			}
+		]
+	},
+	"scopeName": "source.1o"
+}
