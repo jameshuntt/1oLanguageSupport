@@ -5,7 +5,7 @@
   "version": "0.0.5",
   "publisher": "1o",
   "repository": "https://github.com/jameshuntt/1oLanguageSupport.git",
-  "icon": "icons/server.png",
+  "icon": "icons/client.png",
   "engines": {
     "vscode": "^1.83.0"
   },
