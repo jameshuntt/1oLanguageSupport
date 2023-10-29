@@ -2,9 +2,10 @@
   "name": "1o",
   "displayName": "1o",
   "description": "1o Extension: Provides language support for the 1o language, including syntax highlighting, code completion, and other features for developing 1o applications.",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "publisher": "1o",
   "repository": "https://github.com/jameshuntt/1oLanguageSupport.git",
+  "icon": "icons/server.png",
   "engines": {
     "vscode": "^1.83.0"
   },
