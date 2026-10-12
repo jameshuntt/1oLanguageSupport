@@ -1,0 +1,7 @@
+{
+section {
+    id "file_intake.input"
+    title "File"
+    interaction "file.choose_source"
+}
+}

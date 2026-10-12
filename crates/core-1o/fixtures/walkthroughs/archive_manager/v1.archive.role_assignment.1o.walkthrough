@@ -1,0 +1,24 @@
+{
+    walkthrough {
+        id "archive.role_assignment"
+        title "Assign Role"
+        description "Select a non-actor Member and assign exactly one Role."
+        environment "IsolatedDemo"
+        start_requirement "OrganizationWithTwoMembers"
+        fixture_requirement "None"
+        estimated_presentation_ms 5000
+        destructive false
+        safe_demo_only true
+        tag "governance"
+        tag "role"
+        event { kind "NavigateTo" }
+        event { kind "FindRow" }
+        event { kind "InvokeRow" }
+        event { kind "ExpectRoute" }
+        event { kind "Invoke" }
+        event { kind "ExpectRoute" }
+        event { kind "Invoke" }
+        event { kind "Pause" timing_ms 700 }
+        event { kind "Assert" }
+    }
+}

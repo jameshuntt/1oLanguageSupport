@@ -1,0 +1,22 @@
+{
+    walkthrough {
+        id "archive.create_archive_folder"
+        title "Create Archive + Folder"
+        description "Create an Archive and root Folder under the existing Organization."
+        environment "IsolatedDemo"
+        start_requirement "ExistingOrganization"
+        fixture_requirement "None"
+        estimated_presentation_ms 6000
+        destructive false
+        safe_demo_only true
+        tag "admin"
+        tag "mutation"
+        event { kind "NavigateTo" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+    }
+}

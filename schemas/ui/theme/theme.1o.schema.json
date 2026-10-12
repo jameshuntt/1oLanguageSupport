@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o theme v1",
+  "type": "object",
+  "properties": {
+    "theme": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "token": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "token"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "theme"
+  ]
+}

@@ -1,0 +1,5 @@
+{ invoice {
+  
+  id "INV-1"
+  recipient "Example"
+} }

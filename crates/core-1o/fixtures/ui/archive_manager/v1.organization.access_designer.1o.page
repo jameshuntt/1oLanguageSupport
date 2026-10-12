@@ -1,0 +1,15 @@
+{
+page {
+    id "organization.access_designer"
+    route "page.policy"
+    title "Access Designer"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    reference "access.summary"
+    reference "roles.manage"
+    reference "roles.assign"
+    reference "classifications.manage"
+    reference "policy.rules"
+    reference "access.preview"
+}
+}

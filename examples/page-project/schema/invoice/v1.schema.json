@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": [
+    "invoice"
+  ],
+  "properties": {
+    "invoice": {
+      "type": "object",
+      "required": [
+        "id",
+        "recipient"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "recipient": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

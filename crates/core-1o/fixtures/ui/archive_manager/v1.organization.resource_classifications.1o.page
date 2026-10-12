@@ -1,0 +1,10 @@
+{
+page {
+    id "organization.resource_classifications"
+    route "page.resource_classifications"
+    title "Resource Classifications"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    reference "classifications.manage"
+}
+}

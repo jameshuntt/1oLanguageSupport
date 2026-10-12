@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o program v1",
+  "description": "A blueprint-built OS program as a thin identity document: id, window title, start page, and the content address (ref:sha256) of its sealed body — the window spec, initial state, and every page's node tree built from that initial state, recomputable from the blueprint. Emitted by pocket's program_builder_kit.",
+  "type": "object",
+  "properties": {
+    "program": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "start": { "type": "string" },
+        "reference": { "type": "string", "pattern": "^ref:sha256:[0-9a-f]{64}$" }
+      },
+      "required": ["id", "title", "start", "reference"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["program"],
+  "additionalProperties": false
+}

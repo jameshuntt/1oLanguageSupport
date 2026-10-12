@@ -1,0 +1,9 @@
+{
+section {
+    id "roles.assign"
+    title "Role Assignment"
+    selector "organization.membership.status"
+    interaction "role.assign"
+    reference "action_button"
+}
+}

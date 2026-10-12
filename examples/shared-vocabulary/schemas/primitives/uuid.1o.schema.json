@@ -1,0 +1,15 @@
+{
+  "name": "uuid",
+  "kind": "semantic_primitive",
+  "versions": ["v4", "v5"],
+  "v4": {
+    "generation": "random",
+    "forbidden": ["namespace", "input"]
+  },
+  "v5": {
+    "generation": "deterministic_namespace_name",
+    "required": ["namespace", "input"],
+    "namespace_resolution": "literal_uuid_or_uuid_v5_url_namespace_from_utf8_label_v1",
+    "canonical_input": "length_prefixed_utf8_fields_in_declared_order_v1"
+  }
+}

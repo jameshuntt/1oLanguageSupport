@@ -1,0 +1,11 @@
+{
+page {
+    id "organization.policy"
+    route "page.policy"
+    title "Policy Rules"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    reference "policy.rules"
+    reference "access.preview"
+}
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o walkthrough catalog declaration v1",
+  "type": "object",
+  "properties": {
+    "walkthrough": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "environment": {
+          "type": "string",
+          "enum": ["AnyAuthorizedEnvironment", "IsolatedDemo", "FreshProductBootstrap"]
+        },
+        "start_requirement": {
+          "type": "string",
+          "enum": [
+            "FreshProduct",
+            "FreshDemo",
+            "ExistingOrganization",
+            "RegisteredDevice",
+            "UnregisteredDevice",
+            "OrganizationWithTwoMembers",
+            "OrganizationWithArchiveAndFolder"
+          ]
+        },
+        "fixture_requirement": {
+          "type": "string",
+          "enum": ["None", "ExplicitFileFixture"]
+        },
+        "estimated_presentation_ms": {"type": "integer"},
+        "destructive": {"type": "boolean"},
+        "safe_demo_only": {"type": "boolean"},
+        "tag": {"type": "string"},
+        "event": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "NavigateTo",
+                "ExpectRoute",
+                "Invoke",
+                "InvokeRow",
+                "FindRow",
+                "ScrollTo",
+                "SetText",
+                "ChooseOption",
+                "Submit",
+                "WaitUntil",
+                "Assert",
+                "AssertDisabled",
+                "Back",
+                "Forward",
+                "Pause"
+              ]
+            },
+            "timing_ms": {"type": "integer"},
+            "route": {"type": "string"},
+            "interaction": {"type": "string"},
+            "field": {"type": "string"},
+            "option": {"type": "string"},
+            "predicate": {"type": "string"},
+            "binding": {"type": "string"}
+          },
+          "required": ["kind"],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "environment",
+        "start_requirement",
+        "fixture_requirement",
+        "estimated_presentation_ms",
+        "destructive",
+        "safe_demo_only",
+        "event"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["walkthrough"]
+}

@@ -1,0 +1,933 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o story declaration v1 — an organization, its people and the acts played against the live fleet",
+  "type": "object",
+  "properties": {
+    "story": {
+      "type": "object",
+      "properties": {
+        "organization": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "description": "the organization's label; its id is org:<label>-<run>"
+            },
+            "category": {
+              "type": "string",
+              "description": "a category on the marketplace shelf: cultural-archive, casino-bank, content-policy, api-shape, ui-layout"
+            },
+            "venue": {
+              "type": "string",
+              "description": "the organization on devnet whose published rule the rounds run under: majority | supermajority | unanimity | a base58 account"
+            },
+            "founder": {
+              "type": "string",
+              "description": "the founder's name (default founder)"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "archive",
+                "company",
+                "cooperative",
+                "nonprofit"
+              ],
+              "description": "the organization's kind at genesis; its roles come with it (default: archive when the category says archive, else company)"
+            },
+            "weights": {
+              "type": "object",
+              "description": "per decision (rebind, hold, assign, remove, admit): the word equal, the name of a declared method, an object role-weighted mapping role to weight, or an object reputation naming a source or a kind; written into the constitution by the founder before the acts",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "equal, or the name of a declared method"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "role-weighted": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "required": [
+                      "role-weighted"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reputation": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "reputation"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "methods": {
+              "type": "object",
+              "description": "named voting methods written into the constitution before the acts; a weights entry may name one",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "basis": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "description": "equal"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "role-weighted": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "required": [
+                          "role-weighted"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "reputation": {
+                            "type": "string",
+                            "description": "a declared reputation source's name, or a kind"
+                          }
+                        },
+                        "required": [
+                          "reputation"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "abstain": {
+                    "type": "string",
+                    "enum": [
+                      "counted",
+                      "excluded"
+                    ],
+                    "description": "default excluded"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "basis"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reputation_sources": {
+              "type": "object",
+              "description": "named reputation sources: what number a reputation-weighted method reads and how units become votes",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "description": "the kind registered at the deployment's broker"
+                  },
+                  "units_per_vote": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "one extra vote per this many units (default 1)"
+                  },
+                  "cap": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "at most this many extra votes"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "oracles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "roles that may credit reputation: their charters gain reputation_write in the founder's amendment before the acts; the broker honors a credit only from a member the organization's projection grants it to"
+            }
+          },
+          "required": [
+            "label",
+            "category",
+            "venue"
+          ],
+          "additionalProperties": false
+        },
+        "person": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string",
+              "description": "a role the category charters: curator, member, operator, auditor, player, …"
+            },
+            "invited": {
+              "type": "boolean",
+              "description": "not admitted at the start: the organization mints the token for their wallet, and an admit act admits them by vote"
+            },
+            "login": {
+              "type": "boolean",
+              "description": "accepted and implied: every person is a real login at the door (the founder too) — signs up and logs in there, is invited (by the founder through the door, or by the admit act's vote), joins by their invitation policy, and asks, proposes, votes and deposits with their own session"
+            },
+            "policy": {
+              "type": "string",
+              "description": "the person's invitation policy: auto | manual | auto_above:<directly_held|voted_local|voted_anchored> (default auto)"
+            },
+            "pending": {
+              "type": "boolean",
+              "description": "invited at the door but not accepting yet; an accept act or hook accepts later (policy defaults to manual)"
+            }
+          },
+          "required": [
+            "name",
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "act": {
+          "type": "object",
+          "properties": {
+            "ask": {
+              "type": "object",
+              "description": "the constitution's answer to one request by one person",
+              "properties": {
+                "as": {
+                  "type": "string",
+                  "description": "a person's name, or founder"
+                },
+                "open": {
+                  "type": "string",
+                  "description": "a record handle: asks to decrypt (open) it"
+                },
+                "read": {
+                  "type": "string",
+                  "description": "a record handle: asks to read it"
+                },
+                "upload": {
+                  "type": "string",
+                  "description": "a record handle: asks to ingest into it"
+                },
+                "purpose": {
+                  "type": "string",
+                  "description": "a purpose the constitution declares (default operations)"
+                }
+              },
+              "required": [
+                "as"
+              ],
+              "additionalProperties": false
+            },
+            "propose": {
+              "type": "object",
+              "description": "a governed decision: proposal, ballots, anchor, execution",
+              "properties": {
+                "rebind": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "string"
+                    },
+                    "class": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "resource",
+                    "class"
+                  ],
+                  "additionalProperties": false
+                },
+                "hold": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "string"
+                    },
+                    "class": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "resource",
+                    "class"
+                  ],
+                  "additionalProperties": false
+                },
+                "assign": {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "person",
+                    "role"
+                  ],
+                  "additionalProperties": false
+                },
+                "remove": {
+                  "type": "string",
+                  "description": "a person's name"
+                },
+                "admit": {
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "person",
+                    "role"
+                  ],
+                  "additionalProperties": false
+                },
+                "amend": {
+                  "type": "object",
+                  "description": "amend the constitution by vote: the next version is built from the version in force and decided under it (AmendPolicy row; needs a venue at least as strict, e.g. unanimity)",
+                  "properties": {
+                    "add_classification": {
+                      "type": "object",
+                      "description": "one more classification, starting from general's access rules",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "retention": {
+                          "type": "string",
+                          "pattern": "^(none|legal-hold|retain-until:[0-9]+)$",
+                          "description": "none | legal-hold | retain-until:<slot> (default none)"
+                        },
+                        "provenance": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "attributed",
+                            "attested"
+                          ],
+                          "description": "default none"
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "set_row": {
+                      "type": "object",
+                      "description": "one decision row's quorum / threshold / abstention rule (what is not named stays as in force)",
+                      "properties": {
+                        "decision": {
+                          "type": "string",
+                          "enum": [
+                            "rebind",
+                            "hold",
+                            "assign",
+                            "remove",
+                            "admit",
+                            "amend",
+                            "promote",
+                            "transfer"
+                          ]
+                        },
+                        "quorum": {
+                          "type": "string",
+                          "description": "\"75%\" | \"66.67%\" | basis points as digits"
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "\"75%\" | \"66.67%\" | basis points as digits"
+                        },
+                        "abstain": {
+                          "type": "string",
+                          "enum": [
+                            "counted",
+                            "excluded"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "decision"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "set_method": {
+                      "type": "object",
+                      "description": "one decision row counted by a method the constitution declares, or \"equal\" (the equal-member basis, no method)",
+                      "properties": {
+                        "decision": {
+                          "type": "string",
+                          "enum": [
+                            "rebind",
+                            "hold",
+                            "assign",
+                            "remove",
+                            "admit",
+                            "amend",
+                            "promote",
+                            "transfer"
+                          ]
+                        },
+                        "method": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "decision",
+                        "method"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "add_role": {
+                      "type": "object",
+                      "description": "one more role, chartered like an existing one (capabilities, purpose limits, duties, term), granted the named capabilities on classes",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "like": {
+                          "type": "string",
+                          "description": "the existing role whose charter the new one copies"
+                        },
+                        "capabilities": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "charter capabilities added to the copied ones, e.g. reputation_write (an oracle)"
+                        },
+                        "access": {
+                          "type": "object",
+                          "description": "{ \"<class>\": [\"read_object\", \"decrypt_payload\", \"deliver\", \"ingest\", …] }",
+                          "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "like"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "acknowledge_downgrade": {
+                      "type": "boolean",
+                      "description": "the proposer states they know the amendment lowers assurance; without it the agreement refuses to execute a downgrade"
+                    }
+                  },
+                  "minProperties": 1,
+                  "additionalProperties": false
+                },
+                "promote": {
+                  "type": "object",
+                  "description": "a developer program's artifact (by digest) released to a channel (production unless named)",
+                  "properties": {
+                    "artifact": {
+                      "type": "string"
+                    },
+                    "channel": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "artifact"
+                  ],
+                  "additionalProperties": false
+                },
+                "transfer": {
+                  "type": "object",
+                  "description": "the developer account (this organization) passed to another organization",
+                  "properties": {
+                    "to": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "to"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "publish": {
+              "type": "object",
+              "description": "a developer program: a person publishes bytes to staging for the organization (the constitution decides ingest on artifact:<id>)",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "artifact": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "as",
+                "artifact",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "release": {
+              "type": "object",
+              "description": "a developer program: a person asks the staging daemon to promote an artifact to production (the constitution decides ingest on release:<id>; the daemon promotes only on the PromoteArtifact record)",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "artifact": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "as",
+                "artifact"
+              ],
+              "additionalProperties": false
+            },
+            "install": {
+              "type": "object",
+              "description": "the operator installs a promoted release on the node: fetched from production, checked against the PromoteArtifact record, written into the catalog and slice, the unit rendered (dry run in a story)",
+              "properties": {
+                "artifact": {
+                  "type": "string"
+                },
+                "node": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "description": "the role the fleet organization admits the released daemon as (tenant unless named)"
+                }
+              },
+              "required": [
+                "artifact"
+              ],
+              "additionalProperties": false
+            },
+            "handle": {
+              "type": "object",
+              "description": "a public handle issued for a published artifact: an opaque name that stands in for it, with a visibility (a class of the constitution), to one person (holder) or to whoever presents it; the constitution decides share on artifact:<id> for the issuer",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "artifact": {
+                  "type": "string"
+                },
+                "class": {
+                  "type": "string"
+                },
+                "holder": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "as",
+                "artifact",
+                "class"
+              ],
+              "additionalProperties": false
+            },
+            "fetch": {
+              "type": "object",
+              "description": "the artifact fetched by its handle through the door (the handle issued for that artifact name in this story): the door resolves, rewrites the headers toward staging and serves the bytes; their digest must be the published one",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "handle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "as",
+                "handle"
+              ],
+              "additionalProperties": false
+            },
+            "revoke": {
+              "type": "object",
+              "description": "the handle issued for that artifact withdrawn through the door (share on its target, as at issue)",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "handle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "as",
+                "handle"
+              ],
+              "additionalProperties": false
+            },
+            "by": {
+              "type": "string",
+              "description": "who proposes (default founder); a person at the door proposes with their own session and the door stamps them as the proposer"
+            },
+            "ballots": {
+              "description": "all-yes | all-no | a map of person to yes | no | abstain (unnamed people do not cast)",
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "all-yes",
+                    "all-no"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": [
+                      "yes",
+                      "no",
+                      "abstain"
+                    ]
+                  }
+                }
+              ]
+            },
+            "venue": {
+              "type": "string",
+              "description": "this act's venue when its row needs a stricter rule than the story's venue: majority | supermajority | unanimity | a base58 account"
+            },
+            "credit": {
+              "type": "object",
+              "description": "an oracle credits a person reputation at the registered broker",
+              "properties": {
+                "person": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "integer"
+                },
+                "by": {
+                  "type": "string",
+                  "description": "the oracle: the member who credits (default founder); refused unless the projection grants them reputation_write"
+                }
+              },
+              "required": [
+                "person",
+                "kind",
+                "units"
+              ],
+              "additionalProperties": false
+            },
+            "expect": {
+              "type": "string",
+              "enum": [
+                "installed",
+                "promoted",
+                "permitted",
+                "denied",
+                "executed",
+                "fails",
+                "refused",
+                "ballot_refused",
+                "recorded",
+                "restarted",
+                "accepted",
+                "issued",
+                "fetched",
+                "revoked"
+              ],
+              "description": "what this act must come to; the story fails when reality differs. asks: permitted | denied; proposals: executed | fails | refused | ballot_refused; credits: recorded | refused"
+            },
+            "restart": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "voting",
+                  "agreement",
+                  "front-door",
+                  "invitation",
+                  "accounts",
+                  "reputation",
+                  "relayer",
+                  "archive-governance"
+                ]
+              },
+              "description": "units the operator restarts (proof_run wait services the request)"
+            },
+            "accept": {
+              "type": "string",
+              "description": "a pending person accepts their invitation by hand, between acts"
+            },
+            "after_open": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "restart": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "voting",
+                        "agreement",
+                        "front-door",
+                        "invitation",
+                        "accounts",
+                        "reputation",
+                        "relayer",
+                        "archive-governance"
+                      ]
+                    },
+                    "description": "units the operator restarts (proof_run wait services the request)"
+                  },
+                  "accept": {
+                    "type": "string",
+                    "description": "a pending person accepts their invitation by hand"
+                  },
+                  "ask": {
+                    "type": "object",
+                    "description": "the constitution's answer to one request by one person",
+                    "properties": {
+                      "as": {
+                        "type": "string",
+                        "description": "a person's name, or founder"
+                      },
+                      "open": {
+                        "type": "string",
+                        "description": "a record handle: asks to decrypt (open) it"
+                      },
+                      "read": {
+                        "type": "string",
+                        "description": "a record handle: asks to read it"
+                      },
+                      "upload": {
+                        "type": "string",
+                        "description": "a record handle: asks to ingest into it"
+                      },
+                      "purpose": {
+                        "type": "string",
+                        "description": "a purpose the constitution declares (default operations)"
+                      }
+                    },
+                    "required": [
+                      "as"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "expect": {
+                    "type": "string",
+                    "enum": [
+                      "installed",
+                      "promoted",
+                      "permitted",
+                      "denied",
+                      "executed",
+                      "fails",
+                      "refused",
+                      "ballot_refused",
+                      "recorded",
+                      "restarted",
+                      "accepted",
+                      "issued",
+                      "fetched",
+                      "revoked"
+                    ],
+                    "description": "what this act must come to; the story fails when reality differs. asks: permitted | denied; proposals: executed | fails | refused | ballot_refused; credits: recorded | refused"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": "hooks played after the proposal's round opened, before the ballots"
+            },
+            "after_ballots": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "restart": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "voting",
+                        "agreement",
+                        "front-door",
+                        "invitation",
+                        "accounts",
+                        "reputation",
+                        "relayer",
+                        "archive-governance"
+                      ]
+                    },
+                    "description": "units the operator restarts (proof_run wait services the request)"
+                  },
+                  "accept": {
+                    "type": "string",
+                    "description": "a pending person accepts their invitation by hand"
+                  },
+                  "ask": {
+                    "type": "object",
+                    "description": "the constitution's answer to one request by one person",
+                    "properties": {
+                      "as": {
+                        "type": "string",
+                        "description": "a person's name, or founder"
+                      },
+                      "open": {
+                        "type": "string",
+                        "description": "a record handle: asks to decrypt (open) it"
+                      },
+                      "read": {
+                        "type": "string",
+                        "description": "a record handle: asks to read it"
+                      },
+                      "upload": {
+                        "type": "string",
+                        "description": "a record handle: asks to ingest into it"
+                      },
+                      "purpose": {
+                        "type": "string",
+                        "description": "a purpose the constitution declares (default operations)"
+                      }
+                    },
+                    "required": [
+                      "as"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "expect": {
+                    "type": "string",
+                    "enum": [
+                      "installed",
+                      "promoted",
+                      "permitted",
+                      "denied",
+                      "executed",
+                      "fails",
+                      "refused",
+                      "ballot_refused",
+                      "recorded",
+                      "restarted",
+                      "accepted",
+                      "issued",
+                      "fetched",
+                      "revoked"
+                    ],
+                    "description": "what this act must come to; the story fails when reality differs. asks: permitted | denied; proposals: executed | fails | refused | ballot_refused; credits: recorded | refused"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": "hooks played after the ballots, before the round finalizes"
+            },
+            "upload": {
+              "type": "object",
+              "description": "a person at the door uploads real bytes and places them in a collection (a folder under their root); the placement is the organization's ingest decision on collection:<into>",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "into": {
+                  "type": "string",
+                  "description": "the collection (folder) name, e.g. public"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "the object's name; the constitution sees item:<name>"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "purpose": {
+                  "type": "string",
+                  "description": "the purpose declared for the placement (default operations)"
+                }
+              },
+              "required": [
+                "as",
+                "into",
+                "name",
+                "text"
+              ],
+              "additionalProperties": false
+            },
+            "open": {
+              "type": "object",
+              "description": "a person at the door opens a stored object's bytes; judged as item:<name> under its collection by the organization's constitution",
+              "properties": {
+                "as": {
+                  "type": "string"
+                },
+                "object": {
+                  "type": "string",
+                  "description": "the name given at upload"
+                },
+                "purpose": {
+                  "type": "string",
+                  "description": "default operations"
+                }
+              },
+              "required": [
+                "as",
+                "object"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "organization"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "story"
+  ],
+  "additionalProperties": false
+}

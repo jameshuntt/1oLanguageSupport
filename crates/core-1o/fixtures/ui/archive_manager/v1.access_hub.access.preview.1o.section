@@ -1,0 +1,8 @@
+{
+section {
+    id "access_hub.access.preview"
+    title "Effective Access Preview"
+    selector "file_intake.authority.status"
+    selector "file_intake.authority.reason"
+}
+}

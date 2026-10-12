@@ -1,0 +1,24 @@
+{
+    walkthrough {
+        id "archive.revocable_deposit"
+        title "Revocable Deposit"
+        description "Ingest a fixture File with RevocableDeposit and inspect retained rights."
+        environment "IsolatedDemo"
+        start_requirement "OrganizationWithArchiveAndFolder"
+        fixture_requirement "ExplicitFileFixture"
+        estimated_presentation_ms 9000
+        destructive false
+        safe_demo_only true
+        tag "file"
+        tag "custody"
+        event { kind "NavigateTo" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "ChooseOption" }
+        event { kind "Submit" }
+        event { kind "WaitUntil" }
+        event { kind "Assert" }
+    }
+}

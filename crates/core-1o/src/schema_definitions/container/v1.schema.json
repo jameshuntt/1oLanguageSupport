@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Container Configuration Schema v1",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "container": {
+          "type": "object",
+          "properties": {
+            "name":  { "type": "string" },
+            "image": { "type": "string" },
+            "runtime": {
+              "type": "string",
+              "enum": ["runc", "youki", "containerd", "kata"]
+            }
+          },
+          "required": ["name", "image"]
+        },
+
+        "networking": {
+          "type": "object",
+          "properties": {
+            "port_mappings": {
+              "type": "object",
+              "properties": {
+                "host_port":      { "type": "integer" },
+                "container_port": { "type": "integer" },
+                "protocol": {
+                  "type": "string",
+                  "enum": ["tcp", "udp"]
+                }
+              },
+              "required": ["host_port", "container_port"]
+            },
+            "network_mode": {
+              "type": "string",
+              "enum": ["bridge", "host", "none"]
+            }
+          }
+        },
+
+        "resources": {
+          "type": "object",
+          "properties": {
+            "cpu_limit":    { "type": "number" },
+            "memory_limit": { "type": "string" }
+          }
+        },
+
+        "environment": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+
+        "volumes": {
+          "type": "object",
+          "properties": {
+            "source": { "type": "string" },
+            "target": { "type": "string" },
+            "mode": {
+              "type": "string",
+              "enum": ["ro", "rw"]
+            }
+          },
+          "required": ["source", "target"]
+        }
+      }
+    }
+  },
+  "required": ["config"]
+}

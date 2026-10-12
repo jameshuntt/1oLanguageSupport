@@ -1,0 +1,17 @@
+{
+    walkthrough {
+        id "archive.file_custody"
+        title "File Custody"
+        description "Reach File Custody through the existing navigation planner."
+        environment "AnyAuthorizedEnvironment"
+        start_requirement "OrganizationWithArchiveAndFolder"
+        fixture_requirement "None"
+        estimated_presentation_ms 4000
+        destructive false
+        safe_demo_only false
+        tag "smoke"
+        tag "custody"
+        event { kind "NavigateTo" }
+        event { kind "Pause" timing_ms 1200 }
+    }
+}

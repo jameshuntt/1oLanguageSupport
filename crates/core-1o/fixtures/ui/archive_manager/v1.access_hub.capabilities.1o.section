@@ -1,0 +1,6 @@
+{
+section {
+    id "access_hub.capabilities"
+    title "Capabilities"
+}
+}

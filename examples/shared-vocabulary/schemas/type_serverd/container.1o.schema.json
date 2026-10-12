@@ -1,0 +1,8 @@
+{
+  "name": "container",
+  "kind": "type_serverd_declaration",
+  "required": ["name", "model", "storage", "service"],
+  "model_reference": "one_o.workspace.model",
+  "service_reference": "nodeplan.service",
+  "storage_backends": ["sqlite"]
+}

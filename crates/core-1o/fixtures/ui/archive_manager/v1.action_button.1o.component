@@ -1,0 +1,15 @@
+{
+component {
+    id "action_button"
+    title "Semantic action button"
+    profile "resource.button.primary"
+    prop { name "label" type "string" mode "required" }
+    prop { name "interaction" type "interaction" mode "required" }
+    prop { name "target_route" type "route" mode "optional" }
+    prop { name "emphasis" type "string" mode "optional" default "primary" }
+    field { key "label" value "{label}" }
+    field { key "interaction" value "{interaction}" }
+    field { key "target_route" value "{target_route?}" }
+    field { key "emphasis" value "{emphasis}" }
+}
+}

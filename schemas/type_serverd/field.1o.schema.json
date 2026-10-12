@@ -1,0 +1,6 @@
+{
+  "name": "field",
+  "kind": "type_serverd_declaration",
+  "required": ["name", "type"],
+  "primitive_vocabulary": ["uuid", "string", "integer", "bool"]
+}

@@ -1,0 +1,11 @@
+{
+  "type":"object","required":["page"],
+  "properties":{
+    "page":{"type":"object","required":["id","route","title"],"properties":{
+      "id":{"type":"string"},"route":{"type":"string"},"title":{"type":"string"},
+      "section":{"type":"object","required":["id","markdown"],"properties":{
+        "id":{"type":"string"},"markdown":{"type":"string"}
+      }}
+    }}
+  }
+}

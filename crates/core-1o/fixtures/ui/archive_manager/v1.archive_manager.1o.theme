@@ -1,0 +1,13 @@
+{
+theme {
+    id "archive_manager"
+    resource "archive_manager.controls"
+    token { key "density" content "normal" }
+    token { key "spacing.compact" content "6" }
+    token { key "spacing.section" content "12" }
+    token { key "surface.primary" content "system" }
+    token { key "surface.elevated" content "system_elevated" }
+    token { key "text.primary" content "system" }
+    token { key "text.secondary" content "system_secondary" }
+}
+}

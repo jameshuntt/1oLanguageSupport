@@ -1,41 +1,58 @@
 {
-	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "1o",
-	"patterns": [
-		{ "include": "#keywords" },
-		{ "include": "#strings" },
-		{ "include": "#identifiers" }
-	],
-	"repository": {
-		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.1o",
-				"match": "\\b(1o|app|server|client|dashboard|controllers|routes|store|pages|auth|products|alerts|notifications|signin|signup|product)\\b"
-			}]
-		},
-		"strings": {
-			"name": "string.quoted.double.1o",
-			"begin": "\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape.1o",
-					"match": "\\\\."
-				}
-			]
-		}
-	},
-	"identifiers": {
-		"patterns": [
-			{
-				"name": "entity.1o",
-				"match": "\\b\\w+\\.1o\\.(controller|model|component)\\b"
-			},
-			{
-				"name": "entity.1o.import",
-				"match": "import\\s+\\w+\\s+from\\s+'\\w+\\.1o\\.(controller|model|component)'"
-			}
-		]
-	},
-	"scopeName": "source.1o"
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "1o",
+  "scopeName": "source.1o",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#families" },
+    { "include": "#strings" },
+    { "include": "#identifiers" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.1o", "match": "//.*$" },
+        { "name": "comment.block.1o", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.1o",
+          "match": "\\b(1o|app|server|client|dashboard|controllers|routes|store|pages|auth|products|alerts|notifications|signin|signup|product|import|from|export)\\b"
+        }
+      ]
+    },
+    "families": {
+      "patterns": [
+        {
+          "name": "support.type.1o",
+          "match": "\\b(page|section|component|resource|overlay_zone|application_state|application_slice|application_action|application_effect|application_service|daemon_harness|walkthrough|runtime_connection|slice|action|effect|service|theme|template)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.1o",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.1o", "match": "\\\\." }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "entity.name.type.1o",
+          "match": "\\b[\\w-]+\\.1o\\.(config|connectdb|controller|helper|interface|middleware|model|registrar|server|services|utils|brand|component|data|element|hook|localforage|logo|page|seo|service|sitemap|slice|template|theme|website|json)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.1o", "match": "\\b\\d+(\\.\\d+)?\\b" }
+      ]
+    }
+  }
 }

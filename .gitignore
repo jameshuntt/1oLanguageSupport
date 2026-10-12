@@ -1,0 +1,14 @@
+node_modules/
+dist/
+target/
+release-stage/
+release-artifacts/
+READY_TO_PUBLISH/
+.release-package-stage/
+*.vsix
+*.tar.gz
+.DS_Store
+PUBLISH_1O_RESULT.txt
+
+CI_RUN_*.txt
+CI_FAILED_STEPS.txt

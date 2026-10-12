@@ -1,0 +1,10 @@
+{
+section {
+    id "access_hub.classifications.manage"
+    title "Resource Scope"
+    selector "folder.current.name"
+    interaction "access.hub.classification.create"
+    interaction "access.hub.classification.bind_selected"
+    reference "action_button"
+}
+}

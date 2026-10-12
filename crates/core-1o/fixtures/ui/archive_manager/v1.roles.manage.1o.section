@@ -1,0 +1,8 @@
+{
+section {
+    id "roles.manage"
+    title "Role Definitions"
+    interaction "role.create"
+    reference "action_button"
+}
+}

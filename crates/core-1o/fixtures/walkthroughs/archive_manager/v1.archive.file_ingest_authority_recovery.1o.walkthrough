@@ -1,0 +1,50 @@
+{
+    walkthrough {
+        id "archive.file_ingest_authority_recovery"
+        title "File Ingest Authority Recovery"
+        description "Registered Device + active Membership + no File-ingest authority → create and assign a Role → create/bind resource classification → add PutObject/ManageCustody/GetObject policies → return → exact-byte ingest and retrieval."
+        environment "IsolatedDemo"
+        start_requirement "OrganizationWithArchiveAndFolder"
+        fixture_requirement "None"
+        estimated_presentation_ms 14000
+        destructive false
+        safe_demo_only true
+        tag "recovery"
+        tag "policy"
+        tag "capability"
+        tag "file"
+        event { kind "NavigateTo" }
+        event { kind "AssertDisabled" }
+        event { kind "Invoke" }
+        event { kind "ExpectRoute" }
+        event { kind "NavigateTo" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "NavigateTo" }
+        event { kind "InvokeRow" }
+        event { kind "NavigateTo" }
+        event { kind "Invoke" }
+        event { kind "ExpectRoute" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Submit" }
+        event { kind "NavigateTo" }
+        event { kind "ChooseOption" }
+        event { kind "Submit" }
+        event { kind "ChooseOption" }
+        event { kind "Submit" }
+        event { kind "ChooseOption" }
+        event { kind "Submit" }
+        event { kind "Invoke" }
+        event { kind "ExpectRoute" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "ChooseOption" }
+        event { kind "Submit" }
+        event { kind "WaitUntil" }
+        event { kind "Assert" }
+    }
+}

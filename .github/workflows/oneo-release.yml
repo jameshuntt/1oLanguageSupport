@@ -1,0 +1,194 @@
+name: 1o all-platform release build
+
+on:
+  push:
+    branches:
+      - '1o-release-*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  source-gate:
+    name: Source + Rust + extension gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python scripts/verify_source.py
+      - run: cargo test --workspace --lib
+      - run: cargo build --release -p language-server-1o
+      - run: node scripts/ci_smoke.mjs
+      - run: npm ci --no-audit --no-fund
+      - run: npm run compile
+      - name: REAL Marketplace VSIX preflight before launching nine native builders
+        shell: bash
+        run: |
+          mkdir -p release-artifacts
+          node scripts/package_marketplace_target.mjs \
+            --target linux-x64 --runtime linux-x64 \
+            --binary target/release/language-server-1o \
+            --out release-artifacts/package-preflight-linux-x64.vsix
+          python scripts/verify_single_vsix.py release-artifacts/package-preflight-linux-x64.vsix linux-x64
+      - name: Verify core-1o registry package source
+        run: |
+          python scripts/stage_crates.py
+          cargo package --manifest-path release-stage/Cargo.toml -p core-1o --allow-dirty
+
+  native:
+    name: ${{ matrix.target }}
+    needs: source-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runtime: darwin-arm64
+            os: macos-15
+            rust: aarch64-apple-darwin
+            exe: language-server-1o
+          - target: darwin-x64
+            runtime: darwin-x64
+            os: macos-15-intel
+            rust: x86_64-apple-darwin
+            exe: language-server-1o
+          - target: win32-x64
+            runtime: win32-x64
+            os: windows-2022
+            rust: x86_64-pc-windows-msvc
+            exe: language-server-1o.exe
+          - target: win32-arm64
+            runtime: win32-arm64
+            os: windows-11-arm
+            rust: aarch64-pc-windows-msvc
+            exe: language-server-1o.exe
+          - target: linux-x64
+            runtime: linux-x64
+            os: ubuntu-24.04
+            rust: x86_64-unknown-linux-musl
+            exe: language-server-1o
+          - target: alpine-x64
+            runtime: linux-x64
+            os: ubuntu-24.04
+            rust: x86_64-unknown-linux-musl
+            exe: language-server-1o
+          - target: linux-arm64
+            runtime: linux-arm64
+            os: ubuntu-24.04-arm
+            rust: aarch64-unknown-linux-musl
+            exe: language-server-1o
+          - target: alpine-arm64
+            runtime: linux-arm64
+            os: ubuntu-24.04-arm
+            rust: aarch64-unknown-linux-musl
+            exe: language-server-1o
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install musl linker
+        if: startsWith(matrix.target, 'linux-') || startsWith(matrix.target, 'alpine-')
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build native language server
+        shell: bash
+        run: cargo build --release -p language-server-1o --target '${{ matrix.rust }}'
+      - name: Put native binary in smoke-test location
+        shell: bash
+        run: |
+          mkdir -p target/release
+          cp 'target/${{ matrix.rust }}/release/${{ matrix.exe }}' 'target/release/${{ matrix.exe }}'
+          if [[ '${{ runner.os }}' != 'Windows' ]]; then chmod +x 'target/release/${{ matrix.exe }}'; fi
+      - name: Execute real LSP/schema/AST tests on target OS/CPU
+        run: node scripts/ci_smoke.mjs
+      - name: Compile extension client
+        run: |
+          npm ci --no-audit --no-fund
+          npm run compile
+      - name: Package Marketplace target and standalone server
+        shell: bash
+        run: |
+          mkdir -p release-artifacts
+          node scripts/package_marketplace_target.mjs \
+            --target '${{ matrix.target }}' \
+            --runtime '${{ matrix.runtime }}' \
+            --binary 'target/${{ matrix.rust }}/release/${{ matrix.exe }}' \
+            --out 'release-artifacts/1o-0.1.3-${{ matrix.target }}.vsix'
+          python scripts/package_server_archive.py \
+            --binary 'target/${{ matrix.rust }}/release/${{ matrix.exe }}' \
+            --platform '${{ matrix.target }}' \
+            --outdir release-artifacts
+          python scripts/verify_single_vsix.py 'release-artifacts/1o-0.1.3-${{ matrix.target }}.vsix' '${{ matrix.target }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 1o-${{ matrix.target }}
+          path: release-artifacts/*
+          if-no-files-found: error
+
+  linux-armhf:
+    name: linux-armhf
+    needs: source-gate
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: armv7-unknown-linux-gnueabihf
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
+      - name: Build ARMHF language server
+        env:
+          CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER: arm-linux-gnueabihf-gcc
+        run: cargo build --release -p language-server-1o --target armv7-unknown-linux-gnueabihf
+      - name: Execute ARMHF binary under qemu
+        run: |
+          qemu-arm -L /usr/arm-linux-gnueabihf target/armv7-unknown-linux-gnueabihf/release/language-server-1o --version | grep language-server-1o
+          ONEO_SCHEMAS="$PWD/schemas" qemu-arm -L /usr/arm-linux-gnueabihf target/armv7-unknown-linux-gnueabihf/release/language-server-1o check examples/page-project/v1.home.1o.page --workspace examples/page-project
+      - name: Compile extension client
+        run: |
+          npm ci --no-audit --no-fund
+          npm run compile
+      - name: Package ARMHF Marketplace target and standalone server
+        run: |
+          mkdir -p release-artifacts
+          node scripts/package_marketplace_target.mjs \
+            --target linux-armhf \
+            --runtime linux-arm \
+            --binary target/armv7-unknown-linux-gnueabihf/release/language-server-1o \
+            --out release-artifacts/1o-0.1.3-linux-armhf.vsix
+          python scripts/package_server_archive.py \
+            --binary target/armv7-unknown-linux-gnueabihf/release/language-server-1o \
+            --platform linux-armhf \
+            --outdir release-artifacts
+          python scripts/verify_single_vsix.py release-artifacts/1o-0.1.3-linux-armhf.vsix linux-armhf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 1o-linux-armhf
+          path: release-artifacts/*
+          if-no-files-found: error

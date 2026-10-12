@@ -1,0 +1,6 @@
+{
+  "name": "string",
+  "kind": "semantic_primitive",
+  "constraints": ["min_length", "max_length"],
+  "invariant": "min_length_lte_max_length"
+}
