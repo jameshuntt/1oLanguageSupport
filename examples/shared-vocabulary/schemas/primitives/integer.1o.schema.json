@@ -1,0 +1,7 @@
+{
+  "name": "integer",
+  "kind": "semantic_primitive",
+  "constraints": ["signed", "bits", "min", "max"],
+  "supported_bits": [8, 16, 32, 64, 128],
+  "invariant": "min_lte_max"
+}

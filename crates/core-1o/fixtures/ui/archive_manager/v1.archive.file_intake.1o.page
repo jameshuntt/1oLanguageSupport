@@ -1,0 +1,13 @@
+{
+page {
+    id "archive.file_intake"
+    route "page.file.intake"
+    title "File Intake"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    reference "file_intake.access"
+    reference "file_intake.input"
+    reference "file_intake.custody"
+    reference "file_intake.actions"
+}
+}

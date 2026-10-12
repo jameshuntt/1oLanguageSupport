@@ -1,0 +1,9 @@
+{
+section {
+    id "access_hub.access.summary"
+    title "Current Access"
+    selector "organization.membership.status"
+    selector "file_intake.authority.status"
+    selector "file_intake.authority.reason"
+}
+}

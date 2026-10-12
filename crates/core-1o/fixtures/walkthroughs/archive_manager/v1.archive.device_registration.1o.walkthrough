@@ -1,0 +1,23 @@
+{
+    walkthrough {
+        id "archive.device_registration"
+        title "Device Registration Recovery"
+        description "Show typed ingest block, register the bound File-operation Device, and recover."
+        environment "IsolatedDemo"
+        start_requirement "UnregisteredDevice"
+        fixture_requirement "None"
+        estimated_presentation_ms 7000
+        destructive false
+        safe_demo_only true
+        tag "recovery"
+        tag "device"
+        event { kind "NavigateTo" }
+        event { kind "AssertDisabled" }
+        event { kind "Invoke" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "WaitUntil" }
+        event { kind "NavigateTo" }
+        event { kind "Assert" }
+    }
+}

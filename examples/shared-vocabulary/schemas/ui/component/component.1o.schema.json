@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o component v1",
+  "type": "object",
+  "properties": {
+    "component": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "prop": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "string",
+                "interaction",
+                "route",
+                "selector",
+                "resource"
+              ]
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "required",
+                "optional"
+              ]
+            },
+            "default": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "type",
+            "mode"
+          ],
+          "additionalProperties": false
+        },
+        "field": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "component"
+  ]
+}

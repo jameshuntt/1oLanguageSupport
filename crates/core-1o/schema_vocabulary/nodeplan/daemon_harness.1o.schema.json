@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o daemon harness declaration v1",
+  "description": "The nodeplan_daemon_harness attribute's declaration as data: the long form lives in a .1o file the macro loads at compile time (source_1o = \"path\"), with the same lint posture as the inline form. A key present in both the file and the attribute refuses to compile.",
+  "type": "object",
+  "properties": {
+    "daemon_harness": {
+      "type": "object",
+      "properties": {
+        "application": { "type": "string" },
+        "service": { "type": "string" },
+        "exec_start": { "type": "string" },
+        "user": { "type": "string" },
+        "protocol": { "type": "string" },
+        "daemon": { "type": "string" },
+        "unit": { "type": "string" },
+        "group": { "type": "string" },
+        "runtime_kind": { "type": "string" },
+        "runtime_artifact_id": { "type": "string" },
+        "runtime_artifact_path": { "type": "string" },
+        "runtime_artifact_schema": { "type": "string" },
+        "receiver_socket": { "type": "string" },
+        "receiver_path": { "type": "string" },
+        "sender_socket": { "type": "string" },
+        "sender_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["daemon_harness"],
+  "additionalProperties": false
+}

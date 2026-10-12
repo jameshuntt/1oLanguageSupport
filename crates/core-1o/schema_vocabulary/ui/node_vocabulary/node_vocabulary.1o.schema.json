@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o node vocabulary v1",
+  "description": "The UI substrate's node vocabulary as a sealed document: every node kind the program system renders, with its fields ({name, type, mode} — the component schema's prop style) and an honest fieldsComplete flag. Emitted from pocket's program_vocabulary package; the seal is sha256 over the canonical version+source+kinds body, verified by recompute-and-compare.",
+  "type": "object",
+  "properties": {
+    "node_vocabulary": {
+      "type": "object",
+      "properties": {
+        "version": { "type": "integer" },
+        "source": { "type": "string" },
+        "seal": { "type": "string", "pattern": "^ref:sha256:[0-9a-f]{64}$" },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string" },
+              "category": { "type": "string", "enum": ["primitive", "container", "interactive", "integration"] },
+              "fieldsComplete": { "type": "boolean" },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "type": { "type": "string", "enum": ["string", "number", "boolean", "action", "nodes", "element", "render", "strings", "spec"] },
+                    "mode": { "type": "string", "enum": ["required", "optional"] },
+                    "specType": { "type": "string" }
+                  },
+                  "required": ["name", "type", "mode"],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": ["kind", "category", "fieldsComplete", "fields"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["version", "source", "seal", "kinds"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["node_vocabulary"],
+  "additionalProperties": false
+}

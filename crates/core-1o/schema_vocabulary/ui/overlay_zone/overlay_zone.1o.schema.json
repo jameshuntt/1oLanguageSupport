@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o overlay_zone v1",
+  "type": "object",
+  "properties": {
+    "overlay_zone": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "wide_placement": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
+        },
+        "narrow_placement": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
+        },
+        "breakpoint_width": {
+          "type": "integer"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "wide_placement",
+        "narrow_placement",
+        "breakpoint_width"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "overlay_zone"
+  ]
+}

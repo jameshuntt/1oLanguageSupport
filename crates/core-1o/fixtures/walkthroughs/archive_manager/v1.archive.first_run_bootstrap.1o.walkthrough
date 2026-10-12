@@ -1,0 +1,34 @@
+{
+    walkthrough {
+        id "archive.first_run_bootstrap"
+        title "First-Run Bootstrap"
+        description "Create Account → register Device → create Organization → first Archive → first Folder through the real bootstrap service boundary."
+        environment "FreshProductBootstrap"
+        start_requirement "FreshProduct"
+        fixture_requirement "None"
+        estimated_presentation_ms 15000
+        destructive false
+        safe_demo_only true
+        tag "setup"
+        tag "identity"
+        tag "device"
+        tag "governance"
+        event { kind "ExpectRoute" }
+        event { kind "Invoke" }
+        event { kind "SetText" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "WaitUntil" }
+    }
+}

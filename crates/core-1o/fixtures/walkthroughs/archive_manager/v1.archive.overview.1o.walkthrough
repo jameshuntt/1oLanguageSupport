@@ -1,0 +1,21 @@
+{
+    walkthrough {
+        id "archive.overview"
+        title "Archive Overview"
+        description "Navigate Organization → Archives and inspect an Archive."
+        environment "AnyAuthorizedEnvironment"
+        start_requirement "ExistingOrganization"
+        fixture_requirement "None"
+        estimated_presentation_ms 3500
+        destructive false
+        safe_demo_only false
+        tag "smoke"
+        tag "navigation"
+        event { kind "NavigateTo" }
+        event { kind "FindRow" }
+        event { kind "ScrollTo" }
+        event { kind "InvokeRow" }
+        event { kind "ExpectRoute" }
+        event { kind "Pause" timing_ms 1500 }
+    }
+}

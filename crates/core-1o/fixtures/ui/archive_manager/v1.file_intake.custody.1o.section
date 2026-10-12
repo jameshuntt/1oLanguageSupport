@@ -1,0 +1,8 @@
+{
+section {
+    id "file_intake.custody"
+    title "Custody"
+    selector "archive.current.name"
+    selector "folder.current.name"
+}
+}

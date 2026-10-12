@@ -1,0 +1,7 @@
+{
+  "formatVersion": 1,
+  "schemaDirectories": ["schema"],
+  "builders": [
+    {"id": "pages", "label": "Build example PageIR", "command": ["node", "scripts/build.mjs"]}
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o resource v1",
+  "type": "object",
+  "properties": {
+    "resource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "content"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "value"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "resource"
+  ]
+}

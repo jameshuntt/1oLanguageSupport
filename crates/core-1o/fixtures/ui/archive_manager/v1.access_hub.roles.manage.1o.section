@@ -1,0 +1,8 @@
+{
+section {
+    id "access_hub.roles.manage"
+    title "Role Definitions"
+    interaction "access.hub.role.create"
+    reference "action_button"
+}
+}

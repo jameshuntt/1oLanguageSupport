@@ -1,0 +1,7 @@
+{
+  "name": "model",
+  "kind": "type_serverd_declaration",
+  "root_key": "model",
+  "repeatable_child": "field",
+  "semantic_identity": "model_field_newtype_ready"
+}

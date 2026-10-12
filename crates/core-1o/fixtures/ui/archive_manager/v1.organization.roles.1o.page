@@ -1,0 +1,11 @@
+{
+page {
+    id "organization.roles"
+    route "page.roles"
+    title "Roles"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    reference "roles.manage"
+    reference "roles.assign"
+}
+}

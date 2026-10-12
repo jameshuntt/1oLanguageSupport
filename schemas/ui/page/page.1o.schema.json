@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1o page v1",
+  "type": "object",
+  "properties": {
+    "page": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "route",
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "page"
+  ]
+}

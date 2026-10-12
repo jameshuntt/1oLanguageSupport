@@ -1,0 +1,21 @@
+{
+    walkthrough {
+        id "archive.suspend_restore"
+        title "Suspend + Restore Member"
+        description "Suspend and restore a non-actor Membership while preserving the actor."
+        environment "IsolatedDemo"
+        start_requirement "OrganizationWithTwoMembers"
+        fixture_requirement "None"
+        estimated_presentation_ms 6000
+        destructive true
+        safe_demo_only true
+        tag "governance"
+        tag "destructive-explicit"
+        event { kind "NavigateTo" }
+        event { kind "Invoke" }
+        event { kind "WaitUntil" }
+        event { kind "Pause" timing_ms 700 }
+        event { kind "Invoke" }
+        event { kind "WaitUntil" }
+    }
+}

@@ -1,0 +1,9 @@
+{
+section {
+    id "access_hub.roles.assign"
+    title "Role Assignment"
+    selector "organization.membership.status"
+    interaction "access.hub.role.assign"
+    reference "action_button"
+}
+}

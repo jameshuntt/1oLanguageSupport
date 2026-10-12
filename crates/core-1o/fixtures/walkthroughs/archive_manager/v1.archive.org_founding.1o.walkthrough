@@ -1,0 +1,25 @@
+{
+    walkthrough {
+        id "archive.org_founding"
+        title "Found + Grow"
+        description "Found the organization's constitution by kind, invite a member under its admission threshold, and admit them by their own signed acceptance."
+        environment "IsolatedDemo"
+        start_requirement "ExistingOrganization"
+        fixture_requirement "None"
+        estimated_presentation_ms 8000
+        destructive false
+        safe_demo_only true
+        tag "governance"
+        tag "founding"
+        event { kind "NavigateTo" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "SetText" }
+        event { kind "Submit" }
+        event { kind "Assert" }
+        event { kind "Invoke" }
+        event { kind "Pause" timing_ms 700 }
+        event { kind "Assert" }
+    }
+}

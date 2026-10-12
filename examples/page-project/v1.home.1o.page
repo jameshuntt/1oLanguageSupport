@@ -1,0 +1,9 @@
+{
+  page {
+    id "home"
+    route "/"
+    title "Hello from 1o"
+    section { id "begin" markdown "content/begin.md" }
+    section { id "more" markdown "content/more.md" }
+  }
+}

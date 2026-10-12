@@ -1,0 +1,18 @@
+{
+overlay_zone {
+    id "organization.access_hub"
+    title "Access Hub"
+    theme "archive_manager"
+    resource "archive_manager.controls"
+    wide_placement "right"
+    narrow_placement "bottom"
+    breakpoint_width 900
+    reference "access_hub.access.summary"
+    reference "access_hub.roles.manage"
+    reference "access_hub.roles.assign"
+    reference "access_hub.classifications.manage"
+    reference "access_hub.capabilities"
+    reference "access_hub.policy.rules"
+    reference "access_hub.access.preview"
+}
+}

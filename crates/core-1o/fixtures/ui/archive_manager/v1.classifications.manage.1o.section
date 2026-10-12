@@ -1,0 +1,10 @@
+{
+section {
+    id "classifications.manage"
+    title "Resource Scope"
+    selector "folder.current.name"
+    interaction "classification.create"
+    interaction "classification.bind_selected"
+    reference "action_button"
+}
+}

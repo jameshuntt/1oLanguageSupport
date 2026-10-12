@@ -1,0 +1,13 @@
+{
+section {
+    id "file_intake.access"
+    title "Access"
+    selector "session.authentication.status"
+    selector "session.device.status"
+    selector "organization.membership.status"
+    selector "file_intake.authority.status"
+    selector "file_intake.authority.reason"
+    interaction "access.hub.open"
+    interaction "file.authority.open_access_hub"
+}
+}

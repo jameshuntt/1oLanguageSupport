@@ -1,0 +1,9 @@
+{
+section {
+    id "policy.rules"
+    title "Policy Rules"
+    interaction "policy.rule.create"
+    interaction "policy.rule.revoke"
+    reference "action_button"
+}
+}

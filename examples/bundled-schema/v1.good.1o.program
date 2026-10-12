@@ -1,0 +1,6 @@
+{ program {
+  id "demo"
+  title "Demo"
+  start "home"
+  reference "ref:sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+} }

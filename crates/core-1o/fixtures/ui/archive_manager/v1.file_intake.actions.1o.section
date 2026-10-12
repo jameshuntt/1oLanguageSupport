@@ -1,0 +1,7 @@
+{
+section {
+    id "file_intake.actions"
+    title "Actions"
+    interaction "file.ingest"
+}
+}

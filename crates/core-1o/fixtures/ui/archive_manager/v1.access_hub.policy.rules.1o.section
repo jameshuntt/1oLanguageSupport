@@ -1,0 +1,9 @@
+{
+section {
+    id "access_hub.policy.rules"
+    title "Policy Rules"
+    interaction "access.hub.policy.rule.create"
+    interaction "access.hub.policy.rule.revoke"
+    reference "action_button"
+}
+}
