@@ -2,6 +2,7 @@
 name = "language-server-1o"
 version = "0.1.1"
 edition = "2024"
+rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 description = "Portable 1o language server (LSP) with schema discovery and AST export"
 repository = "https://github.com/jameshuntt/1oLanguageSupport"

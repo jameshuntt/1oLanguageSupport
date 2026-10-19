@@ -1,0 +1,48 @@
+# Tests every push and pull request on the newest Rust and on the oldest one these crates
+# support (rust-version in Cargo.toml), and runs clippy. It never publishes: core-1o and
+# language-server-1o are released only by PUBLISH_1O.command, with the Marketplace extension,
+# after the all-platform build (oneo-release.yml) and the release confirmation.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # the crates in this repo, in the order they depend on each other
+  CRATES: core-1o language-server-1o
+
+jobs:
+  test:
+    name: test on Rust ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [stable, "1.85"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - name: Dependency versions the oldest supported Rust can build
+        # the runner's newest cargo writes a fresh Cargo.lock, picking for each dependency the newest version
+        # whose rust-version this one meets
+        if: matrix.rust != 'stable'
+        run: CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo +stable generate-lockfile
+      - name: Test
+        run: cargo test --workspace --all-features
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --all-features

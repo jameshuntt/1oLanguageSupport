@@ -34,3 +34,5 @@ Linux/Windows/macOS server archives are also attached to the GitHub release.
 ## Release
 
 `PUBLISH_1O.command` is the single release entry point. It stages the canonical source into `jameshuntt/1oLanguageSupport`, runs the all-platform GitHub build, verifies every artifact, asks once for `PUBLISH`, then updates the GitHub repository, publishes the two Rust crates, publishes all platform-specific Marketplace variants, and creates a GitHub Release with the binaries and VSIX files.
+
+Every push also runs `.github/workflows/ci.yml`: the tests on stable and Rust 1.85, and clippy. It never publishes.
