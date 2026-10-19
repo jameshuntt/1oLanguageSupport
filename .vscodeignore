@@ -6,6 +6,7 @@
 node_modules/**
 src/**
 crates/**
+goldens/**
 examples/**
 adapters/**
 docs/**

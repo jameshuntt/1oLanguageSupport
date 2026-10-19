@@ -19,7 +19,8 @@ with ZipFile(p) as z:
     missing=required-members
     assert not missing, f'{target} missing: {sorted(missing)[:10]}'
     meta=json.loads(z.read('extension/package.json'))
-    assert (meta['publisher'],meta['name'],meta['version']) == ('1o','1o','0.1.3')
+    version=json.loads((root/'package.json').read_text())['version']
+    assert (meta['publisher'],meta['name'],meta['version']) == ('1o','1o',version)
     assert target in z.read('extension.vsixmanifest').decode('utf8','replace'), f'wrong target platform: {target}'
     assert len(z.read(f'extension/server/{runtime}/{exe}'))>100_000, 'empty native server'
 print('PASS native VSIX '+target+' (bundled Rust server, JS client, grammar, schemas, identity, platform marker)')

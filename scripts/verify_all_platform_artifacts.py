@@ -5,6 +5,8 @@ import json, hashlib, sys
 root=Path(sys.argv[1]).resolve()
 source=Path(__file__).resolve().parent.parent
 version=json.loads((source/'package.json').read_text())['version']
+import re
+server_version=re.search(r'^version\s*=\s*"([^"]+)"',(source/'crates/language-server-1o/Cargo.toml').read_text(),flags=re.M).group(1)
 expect={
  'darwin-arm64':('darwin-arm64','language-server-1o'),
  'darwin-x64':('darwin-x64','language-server-1o'),
@@ -35,7 +37,7 @@ for target,(runtime,exe) in expect.items():
     lines.append(f'{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}')
 # Each native target must also have a standalone server archive.
 for target in expect:
-    globs=[f'language-server-1o-0.1.0-{target}.zip',f'language-server-1o-0.1.0-{target}.tar.gz']
+    globs=[f'language-server-1o-{server_version}-{target}.zip',f'language-server-1o-{server_version}-{target}.tar.gz']
     hits=[]
     for g in globs: hits += list(root.rglob(g))
     if len(hits)!=1: raise SystemExit(f'Expected one standalone server archive for {target}, found {len(hits)}')

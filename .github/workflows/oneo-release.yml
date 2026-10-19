@@ -129,17 +129,18 @@ jobs:
       - name: Package Marketplace target and standalone server
         shell: bash
         run: |
+          VERSION="$(node -p 'require("./package.json").version')"
           mkdir -p release-artifacts
           node scripts/package_marketplace_target.mjs \
             --target '${{ matrix.target }}' \
             --runtime '${{ matrix.runtime }}' \
             --binary 'target/${{ matrix.rust }}/release/${{ matrix.exe }}' \
-            --out 'release-artifacts/1o-0.1.3-${{ matrix.target }}.vsix'
+            --out "release-artifacts/1o-${VERSION}-${{ matrix.target }}.vsix"
           python scripts/package_server_archive.py \
             --binary 'target/${{ matrix.rust }}/release/${{ matrix.exe }}' \
             --platform '${{ matrix.target }}' \
             --outdir release-artifacts
-          python scripts/verify_single_vsix.py 'release-artifacts/1o-0.1.3-${{ matrix.target }}.vsix' '${{ matrix.target }}'
+          python scripts/verify_single_vsix.py "release-artifacts/1o-${VERSION}-${{ matrix.target }}.vsix" '${{ matrix.target }}'
       - uses: actions/upload-artifact@v4
         with:
           name: 1o-${{ matrix.target }}
@@ -176,17 +177,18 @@ jobs:
           npm run compile
       - name: Package ARMHF Marketplace target and standalone server
         run: |
+          VERSION="$(node -p 'require("./package.json").version')"
           mkdir -p release-artifacts
           node scripts/package_marketplace_target.mjs \
             --target linux-armhf \
             --runtime linux-arm \
             --binary target/armv7-unknown-linux-gnueabihf/release/language-server-1o \
-            --out release-artifacts/1o-0.1.3-linux-armhf.vsix
+            --out "release-artifacts/1o-${VERSION}-linux-armhf.vsix"
           python scripts/package_server_archive.py \
             --binary target/armv7-unknown-linux-gnueabihf/release/language-server-1o \
             --platform linux-armhf \
             --outdir release-artifacts
-          python scripts/verify_single_vsix.py release-artifacts/1o-0.1.3-linux-armhf.vsix linux-armhf
+          python scripts/verify_single_vsix.py "release-artifacts/1o-${VERSION}-linux-armhf.vsix" linux-armhf
       - uses: actions/upload-artifact@v4
         with:
           name: 1o-linux-armhf
