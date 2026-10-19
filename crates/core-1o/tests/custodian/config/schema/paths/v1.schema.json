@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custodian paths table v1",
+  "description": "The routes a project declares: named declaration sets, and the raw paths a job may name.",
+  "type": "object",
+  "required": [
+    "paths"
+  ],
+  "properties": {
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "decl": {
+          "type": "object",
+          "description": "Declaration sets by name: each key a set's name (decl:<name>), each value a glob, one directory and a file pattern in it. A name repeats once per glob.",
+          "additionalProperties": {
+            "type": "array",
+            "description": "One declaration set: a glob, one directory and a file pattern in it, written once per glob.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "path": {
+          "type": "array",
+          "description": "A raw path, relative to the root, a job may name as path:<raw>. Repeats: one value per line, in order.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignore": {
+          "type": "array",
+          "description": "A path no count walks into, in tokei's (gitignore) syntax, on top of target, .git, .custodian and .claude. Repeats: one value per line, in order.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-1o-single-keys": true
+    }
+  },
+  "x-1o-single-keys": true
+}

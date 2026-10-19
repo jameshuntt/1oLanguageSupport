@@ -34,11 +34,21 @@
       ]
     },
     "strings": {
-      "name": "string.quoted.double.1o",
-      "begin": "\"",
-      "end": "\"",
       "patterns": [
-        { "name": "constant.character.escape.1o", "match": "\\\\." }
+        {
+          "name": "string.quoted.raw.1o",
+          "begin": "\\br(#*)\"",
+          "end": "\"\\1"
+        },
+        {
+          "name": "string.quoted.double.1o",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.1o", "match": "\\\\(?:[\"\\\\ntr]|u\\{[0-9A-Fa-f]{1,6}\\})" },
+            { "name": "invalid.illegal.escape.1o", "match": "\\\\." }
+          ]
+        }
       ]
     },
     "identifiers": {

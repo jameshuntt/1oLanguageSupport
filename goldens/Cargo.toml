@@ -1,0 +1,22 @@
+# The golden test: every 1o document that exists today reads the same in this core-1o as in
+# the published 0.1.1. Its own workspace, because it depends on both, and in the main
+# workspace that would make `cargo -p core-1o` ambiguous for the release scripts.
+#
+#   cargo test --manifest-path goldens/Cargo.toml
+#   ONEO_GOLDEN_CORPUS=/path/to/documents cargo test --manifest-path goldens/Cargo.toml -- --nocapture
+[package]
+name = "goldens-1o"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[workspace]
+
+[dev-dependencies]
+core-1o = { path = "../crates/core-1o" }
+# the published 0.1.1: the oracle, not a snapshot
+core-1o-v0-1 = { package = "core-1o", version = "=0.1.1" }
+serde_json = "1"
+walkdir = "2.5"

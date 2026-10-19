@@ -5,7 +5,16 @@ use std::sync::Arc;
 use lsp_types::{CompletionItem, CompletionItemKind};
 use serde_json::Value;
 
-use crate::engine::{EngineDiagnostic, Node, NodeValue, Span};
+use crate::engine::{child_schema, ChildSchema, EngineDiagnostic, Node, NodeValue, Span};
+
+/// The schema `key` reads with inside a block of `schema` (core-1o's one rule: properties,
+/// then additionalProperties, a repeating key read with its items).
+fn declared_child<'a>(schema: &'a Value, key: &str) -> Option<&'a Value> {
+    match child_schema(schema, key) {
+        ChildSchema::Declared(schema) => Some(schema),
+        ChildSchema::Any | ChildSchema::Unknown => None,
+    }
+}
 
 pub const SEMANTIC_REF_EXTENSION: &str = "x-1o-semantic-ref";
 
@@ -241,11 +250,8 @@ fn display_semantic_ref(semantic_ref: &str) -> &str {
 
 pub fn semantic_references(ast: &[Node], schema: &Value) -> Vec<SemanticReference> {
     let mut out = Vec::new();
-    let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
-        return out;
-    };
     for node in ast {
-        if let Some(node_schema) = properties.get(&node.key) {
+        if let Some(node_schema) = declared_child(schema, &node.key) {
             collect_node_references(node, node_schema, None, &mut out);
         }
     }
@@ -279,13 +285,10 @@ fn collect_node_references(
     let NodeValue::Block(children) = &node.value else {
         return;
     };
-    let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
-        return;
-    };
     // a block that declares its own service-bound string field opens a new
     // scope for its children; otherwise the enclosing scope inherits down.
     let block_scope: Option<(String, String)> = children.iter().find_map(|child| {
-        let child_schema = properties.get(&child.key)?;
+        let child_schema = declared_child(schema, &child.key)?;
         let child_ref = child_schema.get(SEMANTIC_REF_EXTENSION).and_then(Value::as_str)?;
         if child_ref != SCOPE_SEMANTIC_REF {
             return None;
@@ -297,7 +300,7 @@ fn collect_node_references(
     });
     let effective = block_scope.as_ref().or(scope);
     for child in children {
-        if let Some(child_schema) = properties.get(&child.key) {
+        if let Some(child_schema) = declared_child(schema, &child.key) {
             collect_node_references(child, child_schema, effective, out);
         }
     }
@@ -309,10 +312,7 @@ pub fn schema_for_node_stack<'a>(
 ) -> Option<&'a Value> {
     let mut schema = base_schema;
     for node in parent_stack {
-        schema = schema
-            .get("properties")
-            .and_then(Value::as_object)?
-            .get(&node.key)?;
+        schema = declared_child(schema, &node.key)?;
     }
     Some(schema)
 }

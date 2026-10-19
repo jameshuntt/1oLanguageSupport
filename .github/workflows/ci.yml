@@ -33,9 +33,13 @@ jobs:
         # the runner's newest cargo writes a fresh Cargo.lock, picking for each dependency the newest version
         # whose rust-version this one meets
         if: matrix.rust != 'stable'
-        run: CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo +stable generate-lockfile
+        run: |
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo +stable generate-lockfile
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo +stable generate-lockfile --manifest-path goldens/Cargo.toml
       - name: Test
         run: cargo test --workspace --all-features
+      - name: Goldens (every existing document reads as the published 0.1.1 read it)
+        run: cargo test --manifest-path goldens/Cargo.toml -- --nocapture
 
   clippy:
     runs-on: ubuntu-latest

@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custodian reading spec v1",
+  "description": "One question about a Rust workspace, answered by custodian from klepto's facts. A key marked as repeating is written once per value.",
+  "type": "object",
+  "required": [
+    "reading"
+  ],
+  "properties": {
+    "reading": {
+      "type": "object",
+      "required": [
+        "name",
+        "question",
+        "kind",
+        "target"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The folder its readings go to: readings/<name>/."
+        },
+        "question": {
+          "type": "string",
+          "description": "The question, one line, in the asker's words."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "use_sites",
+            "readers_of_env",
+            "duplicates",
+            "dependents",
+            "declared_in",
+            "sockets",
+            "reach",
+            "constructs",
+            "matches_on",
+            "public_api",
+            "tests_covering",
+            "affected_tests",
+            "sensitivity",
+            "diagnostics",
+            "count",
+            "bundle",
+            "sweep",
+            "impact",
+            "linkage"
+          ],
+          "description": "What the reading reads (the kinds table in custodian_kit's README).",
+          "enumDescriptions": [
+            "every place a path, fn, type, const or macro is used, as klepto resolves it, with its definitions",
+            "every read of an env key (a literal or a constant holding it) by a reader fn or macro, the places that only name it, and the declarations of it",
+            "function bodies repeated across crates (klepto's repeated code), grouped by the crate pairs that share them",
+            "what depends on a crate (the workspace's dependency graph) or on an item (klepto's item graph), direct then transitive",
+            "which declaration files (TOML matching a glob) name the target at a key path",
+            "a binary's declared sockets, and who dials them: env reads of the socket keys, literals of the path, other declarations naming it",
+            "what a change at a crate, a file or an item touches: the items that reach it, their files, crates and binaries, and the declarations naming those binaries",
+            "every place a type is built: a struct literal, a tuple-struct or variant constructor, or a call of its own associated fn returning Self or the type",
+            "every match with an arm naming one of an enum's variants: the arms that name them, the variants never named there, whether a catch-all arm takes the rest",
+            "a crate's public items and, for each, the uses from other crates",
+            "the test functions whose calls reach an item (klepto's item graph), by crate, with the cargo test line that runs exactly them",
+            "from a change (files, a git ref's diff, or a job's touched items): the tests whose closure reaches what changed, and the cargo test lines that run exactly them",
+            "items by their #[sensitivity] level, with owners, and every use of a more sensitive item from a less sensitive one",
+            "every liaise code table (liaise_codes! and #[derive(LiaiseCodes)]): each code's meaning and declaration, and the sites that raise it; a code or a log's text as the target narrows it",
+            "how much there is in a route (the workspace, a crate, a declared set, a module): files, lines, code, comments, blanks per language and per crate by tokei, and the share that is tests by klepto",
+            "a crate, a declared set or a file as one annotated bundles file beside the reading, items at secret or above redacted",
+            "a read-only walk of an undeclared tree (the one walk custodian makes): files by extension, crates, TOML directories, the routes to declare; never in a job",
+            "everything a change to a crate, a file or an item entails, in one reading: its definitions, use sites, constructions, matches, impls, dependents, reach, the tests that cover it, the features and feature configurations that build it, the linkage records naming it, and the cost of the change by dimension, each measured, heuristic or unknown",
+            "the architectural linkage records (why declarations are bound together) naming the target, `*` for all: each bound declaration resolved through klepto, stale when it no longer resolves, to review when its file changed since the record was made; comment anchors with no record behind them"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "A route (crate:<name>, crate:<name>/src/x.rs, decl:<name>, custodian:<part>, path:<raw> in free mode), a name, an item path, an env key or PREFIX*, a binary, or * for the whole scope."
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Which part of the workspace is read.",
+          "properties": {
+            "exclude": {
+              "type": "array",
+              "description": "A path glob, relative to the root, whose .rs files are not read. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tests": {
+              "type": "boolean",
+              "description": "Read each member's tests/ too."
+            },
+            "dependency_macros": {
+              "type": "boolean",
+              "description": "Expand the #[macro_export] macros of dependencies."
+            }
+          },
+          "x-1o-single-keys": true
+        },
+        "declared_in": {
+          "type": "array",
+          "description": "One family of declaration files: TOML matching files, read at key. Repeats: one value per line, in order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "files",
+              "key"
+            ],
+            "properties": {
+              "files": {
+                "type": "array",
+                "description": "A glob relative to the root, or a declared route (decl:<name>). Repeats: one value per line, in order.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "key": {
+                "type": "string",
+                "description": "The key path whose values are the declared names: binary, binds[], env.*, nodes[].answers.*"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "binary",
+                  "env",
+                  "socket",
+                  "socket_env"
+                ],
+                "description": "What the value is, so kinds can join on it.",
+                "enumDescriptions": [
+                  "a name, matched against the target as it is",
+                  "a binary an entry runs; reach and sockets find entries by it",
+                  "an env key an entry sets; readers_of_env joins reads to it",
+                  "a socket path an entry binds or names; sockets reads it",
+                  "the env key that carries a socket path; sockets follows its readers"
+                ]
+              },
+              "entry": {
+                "type": "string",
+                "description": "The key path of the entry's own name (id); the file stem when unset."
+              }
+            },
+            "x-1o-single-keys": true
+          }
+        },
+        "readers": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What counts as reading an env key.",
+          "properties": {
+            "fns": {
+              "type": "array",
+              "description": "A function that reads the environment. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "macros": {
+              "type": "array",
+              "description": "A macro that reads it at compile time. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "follow": {
+              "type": "boolean",
+              "description": "Also every function reaching one of fns."
+            }
+          },
+          "x-1o-single-keys": true
+        },
+        "duplicates": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "How alike two bodies must be.",
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": [
+                "exact",
+                "renamed",
+                "literals",
+                "types",
+                "callees"
+              ],
+              "description": "klepto's shape level."
+            },
+            "min_tokens": {
+              "type": "integer",
+              "description": "Bodies with fewer significant tokens are not compared."
+            }
+          },
+          "x-1o-single-keys": true
+        },
+        "change": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "affected_tests: what changed.",
+          "properties": {
+            "files": {
+              "type": "array",
+              "description": "A changed file, relative to the root. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "git_ref": {
+              "type": "string",
+              "description": "A git ref diffed by a declared line before the reading."
+            },
+            "items": {
+              "type": "array",
+              "description": "A changed item path. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "x-1o-single-keys": true
+        },
+        "bundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "bundle: what the bundle leaves out.",
+          "properties": {
+            "filters": {
+              "type": "array",
+              "description": "A filter of the filters word. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "no_tests",
+                  "no_benches",
+                  "no_examples",
+                  "only_src"
+                ]
+              }
+            },
+            "no_features": {
+              "type": "array",
+              "description": "A feature whose gated files and items are left out. Repeats: one value per line, in order.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "x-1o-single-keys": true
+        }
+      },
+      "x-1o-single-keys": true
+    }
+  },
+  "x-1o-single-keys": true
+}

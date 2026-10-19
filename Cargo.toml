@@ -1,3 +1,5 @@
 [workspace]
 resolver = "2"
 members = ["crates/core-1o", "crates/language-server-1o"]
+# its own workspace: it depends on the published core-1o 0.1.1 beside this one
+exclude = ["goldens"]

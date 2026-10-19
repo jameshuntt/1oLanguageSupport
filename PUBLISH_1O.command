@@ -22,6 +22,8 @@ fi
 gh auth setup-git >/dev/null 2>&1 || fail 'Could not configure GitHub authentication for git.'
 
 VERSION="$(node -p 'require("./package.json").version')"
+CORE_VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' crates/core-1o/Cargo.toml | head -n1)"
+SERVER_VERSION="$(sed -n 's/^version = "\(.*\)"/\1/p' crates/language-server-1o/Cargo.toml | head -n1)"
 TAG="v$VERSION"
 DEFAULT="$(gh repo view "$REPO_SLUG" --json defaultBranchRef --jq '.defaultBranchRef.name')"
 [ -n "$DEFAULT" ] || fail 'Could not determine the repository default branch.'
@@ -60,7 +62,8 @@ BASE_SHA="$(git rev-parse HEAD)"
 git checkout -b "$BRANCH" >/dev/null || fail 'Could not create release branch.'
 python3 "$ROOT/scripts/stage_repository.py" --source "$ROOT" --repo "$WORK/repo" || fail 'Could not stage canonical source.'
 git add -A
-git -c user.name='1o release' -c user.email='release@1o.local' commit -m "Release 1o $VERSION" >/dev/null || fail 'No release commit could be created.'
+# --allow-empty: when the source is already on the default branch, the release commit is still made
+git -c user.name='1o release' -c user.email='release@1o.local' commit --allow-empty -m "Release 1o $VERSION" >/dev/null || fail 'No release commit could be created.'
 RELEASE_SHA="$(git rev-parse HEAD)"
 git push -u origin "$BRANCH" >/dev/null || fail 'Could not send the release source to GitHub.'
 printf 'PASS source sent to GitHub for cross-platform qualification\n'
@@ -93,7 +96,7 @@ python3 scripts/publish_marketplace.py --version "$VERSION" --dir "$OUT" --verif
 printf 'PASS 9 VSIX packages + 9 standalone language-server archives\n'
 
 printf '[5/8] Everything is ready; no public release has been made yet.\n'
-printf 'GitHub: %s\nRust: core-1o 0.1.0 + language-server-1o 0.1.0\nMarketplace: 1o.1o %s across 9 targets\n' "$REPO_SLUG" "$VERSION"
+printf 'GitHub: %s\nRust: core-1o %s + language-server-1o %s\nMarketplace: 1o.1o %s across 9 targets\n' "$REPO_SLUG" "$CORE_VERSION" "$SERVER_VERSION" "$VERSION"
 read -r -p 'Type PUBLISH to publish ALL of it, or press Enter to stop: ' ANSWER
 if [ "$ANSWER" != 'PUBLISH' ]; then
   printf '\nREADY, NOT PUBLISHED. Artifacts: %s\n' "$OUT"
@@ -128,7 +131,7 @@ printf '[8/8] Create the GitHub Release with binaries, VSIX files and checksums.
 ASSETS=()
 while IFS= read -r f; do ASSETS+=("$f"); done < <(find "$OUT" -type f \( -name '*.vsix' -o -name '*.zip' -o -name '*.tar.gz' -o -name 'SHA256SUMS.txt' \) | sort)
 [ "${#ASSETS[@]}" -ge 19 ] || fail 'Release artifact set is incomplete.'
-gh release create "$TAG" "${ASSETS[@]}" --repo "$REPO_SLUG" --target "$DEFAULT" --title "1o $VERSION" --notes "1o $VERSION: core-1o 0.1.0, language-server-1o 0.1.0, and the 1o.1o extension for macOS, Windows, Linux and Alpine." || fail 'Could not create the GitHub Release.'
+gh release create "$TAG" "${ASSETS[@]}" --repo "$REPO_SLUG" --target "$DEFAULT" --title "1o $VERSION" --notes "1o $VERSION: core-1o $CORE_VERSION, language-server-1o $SERVER_VERSION, and the 1o.1o extension for macOS, Windows, Linux and Alpine." || fail 'Could not create the GitHub Release.'
 git push origin --delete "$BRANCH" >/dev/null 2>&1 || true
 
-printf '\n1o RELEASE COMPLETE\nGitHub source: %s (%s)\nGitHub release: %s\ncrates.io: core-1o 0.1.0 + language-server-1o 0.1.0\nVS Code Marketplace: 1o.1o %s (9 targets)\nReport: %s\n' "$REPO_SLUG" "$DEFAULT" "$TAG" "$VERSION" "$LOG"
+printf '\n1o RELEASE COMPLETE\nGitHub source: %s (%s)\nGitHub release: %s\ncrates.io: core-1o %s + language-server-1o %s\nVS Code Marketplace: 1o.1o %s (9 targets)\nReport: %s\n' "$REPO_SLUG" "$DEFAULT" "$TAG" "$CORE_VERSION" "$SERVER_VERSION" "$VERSION" "$LOG"

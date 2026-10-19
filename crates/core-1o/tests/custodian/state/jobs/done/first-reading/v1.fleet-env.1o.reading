@@ -1,0 +1,43 @@
+{
+  reading {
+    name "fleet-env"
+    question "Who reads each NODEPLAN key, and where is it declared?"
+    kind "readers_of_env"
+    target "NODEPLAN_*"
+    scope {
+      exclude "crates/old/**"
+      exclude "attempts/**"
+      tests true
+    }
+    declared_in {
+      files "decl:marketplace"
+      key "env.*"
+      role "env"
+      entry "id"
+    }
+    declared_in {
+      files "decl:slices"
+      files "decl:deploys"
+      key "binary"
+      role "binary"
+    }
+    readers {
+      fns "std::env::var"
+      fns "nodeplan_sdk::env_or"
+      follow false
+    }
+    duplicates {
+      level "renamed"
+      min_tokens 24
+    }
+    change {
+      files "crates/a/src/lib.rs"
+      git_ref "main"
+    }
+    bundle {
+      filters "no_tests"
+      filters "only_src"
+      no_features "metrics"
+    }
+  }
+}

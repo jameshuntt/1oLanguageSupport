@@ -24,7 +24,8 @@ for name in ['core-1o','language-server-1o']:
     if not re.search(r'^publish = false\b',text,flags=re.M):
         raise SystemExit('Expected explicit publish=false safety lock: '+str(manifest))
     text=re.sub(r'^publish = false.*$', '# publish=false removed ONLY IN STAGING; review before any publish',text,flags=re.M)
-    if name=='language-server-1o' and not re.search(r'core-1o\s*=\s*\{[^}]*version\s*=\s*"0\.1\.0"[^}]*path',text):
+    core_version=re.search(r'^version\s*=\s*"([^"]+)"',(ROOT/'crates/core-1o/Cargo.toml').read_text(),flags=re.M).group(1)
+    if name=='language-server-1o' and not re.search(r'core-1o\s*=\s*\{[^}]*version\s*=\s*"'+re.escape(core_version)+r'"[^}]*path',text):
         raise SystemExit('Server needs path+version core-1o dependency')
     manifest.write_text(text)
     for license_name in ['LICENSE-MIT', 'LICENSE-APACHE']:

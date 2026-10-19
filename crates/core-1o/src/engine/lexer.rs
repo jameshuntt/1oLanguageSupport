@@ -21,6 +21,15 @@ pub enum Token {
     Float(f64, usize),
     /// A boolean literal (`true` or `false`). Stores the boolean value and its starting byte position.
     Bool(bool, usize),
+    /// A string whose source text is not its value: one written with an escape (`\"`, `\\`, `\n`,
+    /// `\t`, `\r`, `\u{…}`) or as a raw string (`r"…"`, `r#"…"#`). Stores the value, the position of
+    /// its first character (the `"` or the `r`), and the position just past its closing quote and fence.
+    /// A string without either is still a `StringLiteral`, so a document that lexed before lexes to
+    /// the same tokens.
+    EscapedString(String, usize, usize),
+    /// Text that cannot be read: an unknown escape, a string or block comment never closed. Stores
+    /// what is wrong and the span it covers; the parser reports it as the document's error.
+    Invalid(String, usize, usize),
 }
 
 /// The Lexer is responsible for consuming the source code string and turning it
@@ -75,6 +84,51 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// The character `ahead` places past the current one, without advancing.
+    fn peek_at(&self, ahead: usize) -> Option<char> {
+        self.chars.get(self.pos + ahead).cloned()
+    }
+
+    /// Consumes whitespace and comments: the text no tool reads. `//` runs to the end of its line
+    /// and `/* … */` to the first `*/` (they do not nest), the two forms the editor grammar and the
+    /// language configuration have always declared. A block comment never closed comes back as an
+    /// `Invalid` token, with the lexer at the end of the text.
+    fn skip_trivia(&mut self) -> Option<Token> {
+        loop {
+            self.skip_whitespace();
+            match (self.peek(), self.peek_at(1)) {
+                (Some('/'), Some('/')) => {
+                    while matches!(self.peek(), Some(c) if c != '\n') {
+                        self.advance();
+                    }
+                }
+                (Some('/'), Some('*')) => {
+                    let start = self.pos;
+                    self.pos += 2;
+                    loop {
+                        match (self.peek(), self.peek_at(1)) {
+                            (Some('*'), Some('/')) => {
+                                self.pos += 2;
+                                break;
+                            }
+                            (Some(_), _) => {
+                                self.advance();
+                            }
+                            (None, _) => {
+                                return Some(Token::Invalid(
+                                    "a block comment opened here is never closed with */".into(),
+                                    start,
+                                    start + 2,
+                                ));
+                            }
+                        }
+                    }
+                }
+                _ => return None,
+            }
+        }
+    }
+
     /// The main tokenization function. Consumes the entire source code and returns
     /// a vector of all recognized tokens.
     pub fn tokenize(mut self) -> Vec<Token> {
@@ -82,8 +136,11 @@ impl<'a> Lexer<'a> {
 
         // Loop until the end of the character stream is reached.
         while let Some(_ch) = self.peek() {
-            // Always skip any leading whitespace before trying to recognize a new token.
-            self.skip_whitespace();
+            // Always skip any leading whitespace and comments before trying to recognize a new token.
+            if let Some(invalid) = self.skip_trivia() {
+                tokens.push(invalid);
+                break;
+            }
 
             // Peek again after skipping to get the first non-whitespace character.
             let ch = match self.peek() {
@@ -104,6 +161,7 @@ impl<'a> Lexer<'a> {
                     tokens.push(Token::RBrace(start));
                 }
                 '"' => tokens.push(self.read_string()), // Start of a string literal.
+                'r' if self.raw_string_ahead() => tokens.push(self.read_raw_string()), // r"…" or r#"…"#
                 c if c.is_ascii_digit() => tokens.push(self.read_number()), // Start of a number literal.
                 c if is_ident_start(c) => tokens.push(self.read_identifier_or_bool()), // Start of an identifier or keyword (like true/false).
                 _ => {
@@ -118,24 +176,147 @@ impl<'a> Lexer<'a> {
 
     /// Reads a string literal token, starting from the opening double quote (`"`).
     ///
-    /// Note: This simple implementation does not handle escape sequences (e.g., `\"` or `\n`).
+    /// A backslash starts an escape: `\"` a quote, `\\` a backslash, `\n` a newline, `\t` a tab,
+    /// `\r` a carriage return, `\u{…}` the character with that hex code (1 to 6 digits), the same set
+    /// task_history's diff writer emits. Any other escape is refused where it is written: before 0.2
+    /// a backslash was an ordinary character, so a guessed meaning could silently change a value.
+    /// A string may run over several lines, as it always could.
     fn read_string(&mut self) -> Token {
         let start = self.pos;
         self.advance(); // Consume the initial double quote (").
 
         let mut out = String::new();
-        // Keep reading characters until the closing quote is found.
-        while let Some(ch) = self.peek() {
-            if ch == '"' {
-                break; // Found the closing quote.
+        let mut escaped = false;
+        let mut refused: Option<(String, usize, usize)> = None;
+        loop {
+            match self.peek() {
+                None => {
+                    return Token::Invalid(
+                        "a string opened here is never closed with \"".into(),
+                        start,
+                        start + 1,
+                    );
+                }
+                Some('"') => {
+                    self.advance(); // Consume the final closing quote (").
+                    break;
+                }
+                Some('\\') => {
+                    escaped = true;
+                    let at = self.pos;
+                    self.advance();
+                    match self.read_escape() {
+                        Ok(ch) => out.push(ch),
+                        Err(message) => {
+                            refused.get_or_insert((message, at, self.pos));
+                        }
+                    }
+                }
+                Some(ch) => {
+                    out.push(ch);
+                    self.advance();
+                }
             }
-            out.push(ch); // Append the character to the string value.
-            self.advance(); // Consume the character.
         }
-        self.advance(); // Consume the final closing quote (").
 
-        // The position stored is the start of the opening quote.
-        Token::StringLiteral(out, start)
+        match refused {
+            Some((message, from, to)) => Token::Invalid(message, from, to),
+            // The position stored is the start of the opening quote.
+            None if escaped => Token::EscapedString(out, start, self.pos),
+            None => Token::StringLiteral(out, start),
+        }
+    }
+
+    /// The character an escape stands for, the lexer just past its backslash. A refusal never
+    /// consumes a quote or a line end, so the string's closing quote is still found.
+    fn read_escape(&mut self) -> Result<char, String> {
+        let unknown = |written: &str| {
+            format!(
+                "unknown escape \\{written} in a string; the escapes are \\\" \\\\ \\n \\t \\r \\u{{…}}, and a raw string r\"…\" holds a backslash as written"
+            )
+        };
+        match self.peek() {
+            Some('"') | Some('\\') | Some('n') | Some('t') | Some('r') => {
+                let ch = self.advance().unwrap_or_default();
+                Ok(match ch {
+                    'n' => '\n',
+                    't' => '\t',
+                    'r' => '\r',
+                    other => other,
+                })
+            }
+            Some('u') => {
+                self.advance();
+                let malformed = "\\u is written \\u{…} with 1 to 6 hex digits".to_string();
+                if self.peek() != Some('{') {
+                    return Err(malformed);
+                }
+                self.advance();
+                let mut hex = String::new();
+                while let Some(c) = self.peek() {
+                    if c == '}' || !c.is_ascii_hexdigit() || hex.len() == 6 {
+                        break;
+                    }
+                    hex.push(c);
+                    self.advance();
+                }
+                if hex.is_empty() || self.peek() != Some('}') {
+                    return Err(malformed);
+                }
+                self.advance();
+                u32::from_str_radix(&hex, 16)
+                    .ok()
+                    .and_then(char::from_u32)
+                    .ok_or_else(|| format!("\\u{{{hex}}} is not a character"))
+            }
+            Some(other) if other != '\n' => {
+                self.advance();
+                Err(unknown(&other.to_string()))
+            }
+            _ => Err(unknown("")),
+        }
+    }
+
+    /// Whether the `r` at the current position opens a raw string: `r`, any number of `#`, `"`.
+    fn raw_string_ahead(&self) -> bool {
+        let mut ahead = 1;
+        while self.peek_at(ahead) == Some('#') {
+            ahead += 1;
+        }
+        self.peek_at(ahead) == Some('"')
+    }
+
+    /// Reads a raw string, `r"…"` or `r#"…"#`: its text is its value, backslashes and all, and it
+    /// ends at the first `"` followed by as many `#` as opened it.
+    fn read_raw_string(&mut self) -> Token {
+        let start = self.pos;
+        self.advance(); // r
+        let mut fence = 0;
+        while self.peek() == Some('#') {
+            fence += 1;
+            self.advance();
+        }
+        self.advance(); // "
+        let mut out = String::new();
+        loop {
+            match self.peek() {
+                None => {
+                    return Token::Invalid(
+                        format!("a raw string opened here is never closed with \"{}", "#".repeat(fence)),
+                        start,
+                        start + fence + 2,
+                    );
+                }
+                Some('"') if (1..=fence).all(|k| self.peek_at(k) == Some('#')) => {
+                    self.pos += 1 + fence;
+                    return Token::EscapedString(out, start, self.pos);
+                }
+                Some(ch) => {
+                    out.push(ch);
+                    self.advance();
+                }
+            }
+        }
     }
 
     /// Reads a number literal token (either an integer or a floating-point number).

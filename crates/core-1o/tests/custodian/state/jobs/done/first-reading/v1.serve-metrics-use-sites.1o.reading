@@ -1,0 +1,11 @@
+/* A question with quotes and a second line, which the TOML twin used to carry. */
+reading {
+  name "serve-metrics-use-sites"
+  question "Where is \"serve_metrics\" used now?\nIt should be one place."
+  kind "use_sites"
+  target "serve_metrics"
+  scope {
+    exclude "published/**"
+    exclude r"attempts\old/**"   // a raw string keeps its backslash
+  }
+}

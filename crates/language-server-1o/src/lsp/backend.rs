@@ -9,14 +9,16 @@ use std::str::FromStr;
 use anyhow::Result;
 use lsp_server::{Message, Notification, Request};
 use lsp_types::{
-    CompletionItem, CompletionParams, CompletionResponse, Diagnostic, InitializeParams,
-    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    CompletionItem, CompletionParams, CompletionResponse, Diagnostic, Documentation, Hover,
+    HoverContents, HoverParams, HoverProviderCapability, InitializeParams, MarkupContent,
+    MarkupKind, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
 use crate::document_store::DocumentStore;
 use crate::engine::{
-    compute_completion_context, completions_for_schema, diagnostics_for_text_workspace,
-    parse_nodeplan_workspace_link, CompletionKind, Lexer, Parser, Workspace,
+    compute_completion_context, completions_for_schema, declared_schema, describe_key,
+    diagnostics_for_text_workspace, enum_value_description, parse_nodeplan_workspace_link,
+    CompletionKind, Lexer, NodeValue, Parser, Workspace,
 };
 use crate::semantic::{
     normalize_completion_items, schema_for_node_stack, semantic_ref_for_schema,
@@ -136,6 +138,7 @@ impl Backend {
         ServerCapabilities {
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
             completion_provider: Some(lsp_types::CompletionOptions::default()),
+            hover_provider: Some(HoverProviderCapability::Simple(true)),
             ..Default::default()
         }
     }
@@ -146,6 +149,10 @@ impl Backend {
                 let params: CompletionParams = serde_json::from_value(request.params)?;
                 let items = self.completion_items(params)?;
                 Ok(Some(serde_json::to_value(CompletionResponse::Array(items))?))
+            }
+            "textDocument/hover" => {
+                let params: HoverParams = serde_json::from_value(request.params)?;
+                Ok(Some(serde_json::to_value(self.hover(params)?)?))
             }
             _ => Ok(None),
         }
@@ -359,6 +366,49 @@ impl Backend {
         Ok(items)
     }
 
+    /// The schema's word on what is under the cursor: on a key, its type, description and values;
+    /// on an enum value, that value's description.
+    pub fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let text = self.document_text(&uri)?;
+        let path = uri_to_path(&uri);
+        let Some(record) = path.file_name().and_then(|value| value.to_str()).and_then(parse_filename) else {
+            return Ok(None);
+        };
+        let Some(base_schema) = self
+            .workspace
+            .read()
+            .expect("workspace read lock")
+            .schema_for_file(&record.modifier, &record.version)
+        else {
+            return Ok(None);
+        };
+        let Ok(ast) = Parser::new(Lexer::new(&text).tokenize()).parse() else {
+            return Ok(None);
+        };
+        let cursor = offset_from_position(&text, params.text_document_position_params.position);
+        let context = compute_completion_context(&ast, cursor);
+        let Some((node, parents)) = context.parent_stack.split_last() else {
+            return Ok(None);
+        };
+        let Some(declared) = schema_for_node_stack(&base_schema, parents)
+            .and_then(|parent| declared_schema(parent, &node.key))
+        else {
+            return Ok(None);
+        };
+        let on_key = cursor <= node.span.start + node.key.chars().count();
+        let value_description = match &node.value {
+            NodeValue::String(value) if !on_key => enum_value_description(declared, &serde_json::Value::from(value.as_str()))
+                .map(|description| format!("`{value}`: {description}")),
+            _ => None,
+        };
+        let value = value_description.unwrap_or_else(|| describe_key(&node.key, declared));
+        Ok(Some(Hover {
+            contents: HoverContents::Markup(MarkupContent { kind: MarkupKind::Markdown, value }),
+            range: None,
+        }))
+    }
+
     pub fn semantic_context(&self) -> Option<SemanticContext> {
         let link_files = self
             .workspace
@@ -401,8 +451,12 @@ fn primitive_value_completions(schema: &serde_json::Value) -> Vec<CompletionItem
     if let Some(values) = schema.get("enum").and_then(serde_json::Value::as_array) {
         return values
             .iter()
-            .filter_map(|value| value.as_str())
-            .map(|value| CompletionItem::new_simple(value.to_string(), "schema enum".into()))
+            .filter_map(|value| Some((value, value.as_str()?)))
+            .map(|(value, label)| CompletionItem {
+                documentation: enum_value_description(schema, value)
+                    .map(|description| Documentation::String(description.to_string())),
+                ..CompletionItem::new_simple(label.to_string(), "schema enum".into())
+            })
             .collect();
     }
     if schema.get("type").and_then(serde_json::Value::as_str) == Some("boolean") {
@@ -819,6 +873,89 @@ mod tests {
         let invalid = r#"{ endpoint { name "todo_local" service "type_serverd" route { method "POST" path "/todos" operation "missing.create" } } }"#;
         let diagnostics = backend.document_diagnostics(&endpoint_uri, invalid).unwrap();
         assert!(diagnostics.iter().any(|diagnostic| diagnostic.message.contains("unknown 1o operation 'missing.create'")));
+    }
+
+    /// A workspace whose `reading` schema describes its keys and its enum values.
+    fn described_reading_backend() -> (TempDir, Backend, Uri, String) {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("schema/reading")).unwrap();
+        fs::write(
+            tmp.path().join("schema/reading/v1.schema.json"),
+            r#"{"type":"object","properties":{"reading":{"type":"object","properties":{
+                "kind":{"type":"string","description":"What the reading reads.",
+                        "enum":["use_sites","reach"],
+                        "enumDescriptions":["Where a name is used.","What a change reaches."]},
+                "exclude":{"type":"array","items":{"type":"string"},"description":"A glob left out."}
+            }}}}"#,
+        )
+        .unwrap();
+        let text = "{ reading {\n  kind \"reach\"\n  exclude \"a/**\"\n} }\n".to_string();
+        let path = tmp.path().join("v1.r.1o.reading");
+        fs::write(&path, &text).unwrap();
+        let uri = Uri::from_str(&format!("file://{}", path.display())).unwrap();
+        let (sender, _receiver) = crossbeam_channel::unbounded();
+        let backend = Backend::new_with_semantic_bridge(Client::new(sender), tmp.path(), SemanticBridge::offline());
+        backend.set_open_document(&uri, text.clone(), 1);
+        (tmp, backend, uri, text)
+    }
+
+    fn documentation(item: &CompletionItem) -> String {
+        match &item.documentation {
+            Some(lsp_types::Documentation::String(s)) => s.clone(),
+            Some(lsp_types::Documentation::MarkupContent(m)) => m.value.clone(),
+            None => String::new(),
+        }
+    }
+
+    #[test]
+    fn enum_value_completion_carries_each_value_description() {
+        let (_tmp, backend, uri, text) = described_reading_backend();
+        let items = backend.completion_items(completion_params_at_text(&uri, &text, "reach\"")).unwrap();
+        let reach = items.iter().find(|item| item.label == "reach").expect("reach offered");
+        assert!(documentation(reach).contains("What a change reaches."), "{reach:?}");
+        let use_sites = items.iter().find(|item| item.label == "use_sites").expect("use_sites offered");
+        assert!(documentation(use_sites).contains("Where a name is used."), "{use_sites:?}");
+    }
+
+    #[test]
+    fn key_completion_carries_the_key_description_and_says_when_it_repeats() {
+        let (_tmp, backend, uri, text) = described_reading_backend();
+        let params = CompletionParams {
+            text_document_position: lsp_types::TextDocumentPositionParams {
+                text_document: lsp_types::TextDocumentIdentifier { uri },
+                position: lsp_types::Position { line: 1, character: 1 },
+            },
+            work_done_progress_params: Default::default(),
+            partial_result_params: Default::default(),
+            context: None,
+        };
+        let _ = text;
+        let items = backend.completion_items(params).unwrap();
+        let kind = items.iter().find(|item| item.label == "kind").expect("kind offered");
+        assert!(documentation(kind).contains("What the reading reads."), "{kind:?}");
+        let exclude = items.iter().find(|item| item.label == "exclude").expect("exclude offered");
+        assert!(documentation(exclude).contains("A glob left out."), "{exclude:?}");
+        assert!(exclude.detail.as_deref().unwrap_or("").contains("repeats"), "{exclude:?}");
+    }
+
+    #[test]
+    fn hover_on_an_enum_value_shows_its_description_and_on_a_key_the_key_description() {
+        let (_tmp, backend, uri, text) = described_reading_backend();
+        let hover = |needle: &str| {
+            let position = completion_params_at_text(&uri, &text, needle).text_document_position;
+            let request = Request::new(
+                lsp_server::RequestId::from(1),
+                "textDocument/hover".into(),
+                lsp_types::HoverParams { text_document_position_params: position, work_done_progress_params: Default::default() },
+            );
+            let result = backend.handle_request(request).unwrap().expect("a hover");
+            serde_json::to_string(&result).unwrap()
+        };
+        let on_value = hover("reach\"");
+        assert!(on_value.contains("What a change reaches."), "{on_value}");
+        let on_key = hover("kind ");
+        assert!(on_key.contains("What the reading reads."), "{on_key}");
+        assert!(Backend::capabilities().hover_provider.is_some());
     }
 
     fn completion_params_at_text(uri: &Uri, text: &str, value: &str) -> CompletionParams {

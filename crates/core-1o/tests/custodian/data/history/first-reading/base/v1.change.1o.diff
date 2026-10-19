@@ -1,0 +1,11 @@
+diff {
+  schema "nodeplan.1o.diff.v1"
+  record_kind "change"
+  task_id "first-reading"
+  revision "base"
+  sequence 3
+  path "src/oneo.rs"
+  operation "modify"
+  before_digest "168861564c3f742491492c929f3c99283ae2230289ab27046b06947df1a7dc86"
+  after_digest "none"
+}

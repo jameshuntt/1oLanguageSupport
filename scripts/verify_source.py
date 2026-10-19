@@ -4,7 +4,7 @@ import json, re, sys
 ROOT=Path(__file__).resolve().parent.parent
 pkg=json.loads((ROOT/'package.json').read_text())
 assert (pkg.get('publisher'),pkg.get('name')) == ('1o','1o')
-assert pkg.get('version') == '0.1.3'
+assert pkg.get('version') == '0.2.0'
 assert pkg.get('main') == './dist/extension.js'
 assert pkg.get('extensionKind') == ['workspace']
 langs={x['id']:x for x in pkg['contributes']['languages']}
@@ -33,7 +33,8 @@ core=(ROOT/'crates/core-1o/Cargo.toml').read_text()
 server=(ROOT/'crates/language-server-1o/Cargo.toml').read_text()
 assert re.search(r'^name\s*=\s*"core-1o"',core,re.M)
 assert re.search(r'^name\s*=\s*"language-server-1o"',server,re.M)
-assert 'core-1o = { version = "0.1.0", path = "../core-1o" }' in server
+core_version=re.search(r'^version\s*=\s*"([^"]+)"',core,re.M).group(1)
+assert f'core-1o = {{ version = "{core_version}", path = "../core-1o" }}' in server, 'the server must depend on the core-1o version beside it'
 assert 'publish = false' in core and 'publish = false' in server
 lib=(ROOT/'crates/language-server-1o/src/lib.rs').read_text()
 assert 'pub use core_1o' in lib

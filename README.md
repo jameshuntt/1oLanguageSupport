@@ -8,7 +8,7 @@ Canonical source for the `1o.1o` VS Code extension and its Rust implementation.
 - `language-server-1o` — LSP/CLI program built on `core-1o`.
 - `1o.1o` — the existing VS Code Marketplace extension. It keeps the TextMate grammar, icons and file associations, and bundles the correct `language-server-1o` binary for each platform.
 
-Authored files are `v1.<name>.1o.<type>`. JSON is used only for schema definitions. New `.1o.<type>` files are recognized by the generic 1o association; project schemas live at `schema/<type>/v1.schema.json`. Workspace schemas override the schemas bundled with the extension.
+Authored files are `v1.<name>.1o.<type>`. The language (records, strings and their escapes, raw strings, comments) and the schema words the validator reads are described in [crates/core-1o/README.md](crates/core-1o/README.md). JSON is used only for schema definitions. New `.1o.<type>` files are recognized by the generic 1o association; project schemas live at `schema/<type>/v1.schema.json`. Workspace schemas override the schemas bundled with the extension.
 
 `core-1o` embeds the same 27-schema vocabulary used by the extension. The extension also passes its bundled `schemas/` directory through `ONEO_SCHEMAS`; project-local schemas still override shipped defaults. Applications, the standalone server and VS Code therefore start from the same schema set.
 

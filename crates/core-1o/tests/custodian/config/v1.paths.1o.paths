@@ -1,0 +1,11 @@
+// The routes this project declares. A set's name is written once per glob.
+paths {
+  decl {
+    marketplace "marketplace/*.toml"
+    slices "marketplace/slices/*.toml"
+    slices "marketplace/slices/extra/*.toml"   // a second glob for the same set
+    deploys "marketplace/deploys/*.toml"
+  }
+  path "docs"
+  ignore "attempts/**"
+}

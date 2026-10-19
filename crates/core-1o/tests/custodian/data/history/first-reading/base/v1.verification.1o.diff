@@ -1,0 +1,10 @@
+diff {
+  schema "nodeplan.1o.diff.v1"
+  record_kind "verification"
+  task_id "first-reading"
+  revision "base"
+  sequence 4
+  check "cargo test --test oneo"
+  outcome "pass"
+  note "a_double_quote_cannot_be_written_and_says_so: \"ok\"\n14 passed\t0 failed"
+}

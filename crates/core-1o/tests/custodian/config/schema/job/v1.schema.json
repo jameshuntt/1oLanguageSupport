@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custodian job file v1",
+  "description": "A job folder's own file: every key optional.",
+  "type": "object",
+  "required": [
+    "job"
+  ],
+  "properties": {
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The job's id, given when it starts."
+        },
+        "name": {
+          "type": "string",
+          "description": "The job's name."
+        },
+        "kind": {
+          "type": "string",
+          "description": "specs (the folder's spec files, the default) or a job template's kind (triage)."
+        },
+        "target": {
+          "type": "string",
+          "description": "A template's {target}."
+        },
+        "origin": {
+          "type": "string",
+          "description": "For an imported job: the digest of the bundle it came from."
+        },
+        "count": {
+          "type": "boolean",
+          "description": "Count the job's routes at open, after each step that changes code, and at close."
+        },
+        "routes": {
+          "type": "array",
+          "description": "A route counted (crate:<name>, decl:<name>, *); the template's count_route, else the workspace. Repeats: one value per line, in order.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "task_id": {
+          "type": "string",
+          "description": "The task this run writes its history records into (.custodian/data/history/<task_id>/), given when it starts."
+        },
+        "revision": {
+          "type": "string",
+          "description": "The revision of the task this run is: base, fix1, ..."
+        }
+      },
+      "x-1o-single-keys": true
+    }
+  },
+  "x-1o-single-keys": true
+}

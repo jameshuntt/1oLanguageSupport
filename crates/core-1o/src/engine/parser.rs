@@ -112,6 +112,13 @@ impl Parser {
                 } else { unreachable!() }
             }
 
+            Token::EscapedString(value, _, _) => {
+                self.advance();
+                Ok(NodeValue::String(value))
+            }
+
+            Token::Invalid(message, start, end) => Err(invalid(message, start, end)),
+
             tok => Err(ParseError::UnexpectedToken {
                 expected: "value",
                 found: self.token_span(&tok)
@@ -139,6 +146,8 @@ impl Parser {
                     let node = self.parse_node()?;
                     nodes.push(node);
                 }
+
+                Token::Invalid(message, start, end) => return Err(invalid(message, start, end)),
 
                 _ => {
                     self.advance(); // skip unexpected
@@ -194,9 +203,14 @@ impl Parser {
             | Token::Number(_, pos)
             | Token::Float(_, pos)
             | Token::Bool(_, pos) => Span { start: *pos, end: *pos + 1 },
+            Token::EscapedString(_, start, _) | Token::Invalid(_, start, _) => Span { start: *start, end: *start + 1 },
         }
     }
 
+    /// The document's entries, in order. The top level holds `{ … }` blocks, whose entries are the
+    /// document's (the form every 1o file has used), and, since 0.2, entries written directly:
+    /// a named record such as task_history's `diff { … }`, or a `key value`. Both forms may sit
+    /// in one document. Anything else at the top level ends the document, as it always has.
     pub fn parse(mut self) -> Result<Vec<Node>, ParseError> {
         let mut out = Vec::new();
 
@@ -211,6 +225,8 @@ impl Parser {
                     let block = self.parse_block()?;
                     out.extend(block);
                 }
+                Token::Identifier(_, _) => out.push(self.parse_node()?),
+                Token::Invalid(message, start, end) => return Err(invalid(message, start, end)),
                 _ => break,
             }
         }
@@ -228,6 +244,11 @@ impl Parser {
 
 
 
+/// What the lexer could not read, as the parse error the document reports.
+fn invalid(message: String, start: usize, end: usize) -> ParseError {
+    ParseError::InvalidStructure { message, span: Span { start, end } }
+}
+
 pub fn token_start_static(tok: &Token) -> usize {
     match tok {
         Token::LBrace(pos)
@@ -236,7 +257,9 @@ pub fn token_start_static(tok: &Token) -> usize {
         | Token::StringLiteral(_, pos)
         | Token::Number(_, pos)
         | Token::Float(_, pos)
-        | Token::Bool(_, pos) => *pos,
+        | Token::Bool(_, pos)
+        | Token::EscapedString(_, pos, _)
+        | Token::Invalid(_, pos, _) => *pos,
     }
 }
 
@@ -248,6 +271,7 @@ pub fn token_end_static(tok: &Token) -> usize {
         Token::Number(value, pos) => *pos + value.to_string().chars().count(),
         Token::Float(value, pos) => *pos + value.to_string().chars().count(),
         Token::Bool(value, pos) => *pos + if *value { 4 } else { 5 },
+        Token::EscapedString(_, _, end) | Token::Invalid(_, _, end) => *end,
     }
 }
 
@@ -260,5 +284,6 @@ pub fn token_span_static(tok: &Token) -> Span {
         | Token::Number(_, pos)
         | Token::Float(_, pos)
         | Token::Bool(_, pos) => Span { start: *pos, end: *pos + 1 },
+        Token::EscapedString(_, start, _) | Token::Invalid(_, start, _) => Span { start: *start, end: *start + 1 },
     }
 }
